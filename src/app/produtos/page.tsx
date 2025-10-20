@@ -34,14 +34,15 @@ import { useUser } from "@/firebase/auth/use-user";
 
 export default function ProdutosPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
 
   const produtosQuery = useMemo(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'produtos');
   }, [firestore, user]);
 
-  const { data: produtos, loading } = useCollection<Produto>(produtosQuery);
+  const { data: produtos, loading: dataLoading } = useCollection<Produto>(produtosQuery);
+  const loading = userLoading || dataLoading;
 
   return (
     <div className="flex flex-col gap-6">

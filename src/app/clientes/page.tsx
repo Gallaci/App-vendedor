@@ -34,14 +34,16 @@ import { useUser } from "@/firebase/auth/use-user";
 
 export default function ClientesPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
 
   const clientesQuery = useMemo(() => {
+    // Only create the query if the user is loaded and authenticated
     if (!firestore || !user) return null;
     return collection(firestore, 'clientes');
   }, [firestore, user]);
 
-  const { data: clientes, loading } = useCollection<Cliente>(clientesQuery);
+  const { data: clientes, loading: dataLoading } = useCollection<Cliente>(clientesQuery);
+  const loading = userLoading || dataLoading;
 
   return (
     <div className="flex flex-col gap-6">

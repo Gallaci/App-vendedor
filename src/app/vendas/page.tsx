@@ -42,14 +42,15 @@ const statusVariant = {
 
 export default function VendasPage() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
 
   const vendasQuery = useMemo(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'vendas');
   }, [firestore, user]);
 
-  const { data: vendas, loading } = useCollection<Venda>(vendasQuery);
+  const { data: vendas, loading: dataLoading } = useCollection<Venda>(vendasQuery);
+  const loading = userLoading || dataLoading;
 
   return (
     <div className="flex flex-col gap-6">
