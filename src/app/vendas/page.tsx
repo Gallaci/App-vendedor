@@ -91,7 +91,7 @@ export default function VendasPage() {
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{venda.produto}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {format(venda.data.toDate(), "dd/MM/yyyy", { locale: ptBR })}
+                      {venda.data ? format(venda.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
                     </TableCell>
                     <TableCell className="text-right">R$ {venda.total.toFixed(2)}</TableCell>
                     <TableCell className="hidden sm:table-cell">

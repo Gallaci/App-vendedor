@@ -6,7 +6,7 @@ export type Venda = {
   produto: string;
   quantidade: number;
   total: number;
-  data: Timestamp; // Changed to Timestamp for Firestore
+  data: Timestamp; 
   status: 'Concluído' | 'Pendente' | 'Cancelado';
 };
 
