@@ -30,13 +30,16 @@ import { useMemo } from "react";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Cliente } from "@/lib/types";
+import { useUser } from "@/firebase/auth/use-user";
 
 export default function ClientesPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const clientesQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'clientes');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: clientes, loading } = useCollection<Cliente>(clientesQuery);
 

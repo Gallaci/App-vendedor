@@ -32,6 +32,7 @@ import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useMemo } from "react";
 import type { Venda } from "@/lib/types";
+import { useUser } from "@/firebase/auth/use-user";
 
 const statusVariant = {
   'Concluído': 'default',
@@ -41,10 +42,12 @@ const statusVariant = {
 
 export default function VendasPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const vendasQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'vendas');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: vendas, loading } = useCollection<Venda>(vendasQuery);
 

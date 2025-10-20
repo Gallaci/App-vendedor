@@ -30,13 +30,16 @@ import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useMemo } from "react";
 import type { Produto } from "@/lib/types";
+import { useUser } from "@/firebase/auth/use-user";
 
 export default function ProdutosPage() {
   const firestore = useFirestore();
+  const { user } = useUser();
+
   const produtosQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'produtos');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: produtos, loading } = useCollection<Produto>(produtosQuery);
 

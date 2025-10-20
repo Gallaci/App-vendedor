@@ -10,6 +10,7 @@ import { collection } from 'firebase/firestore'
 import type { Venda, Cliente } from '@/lib/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useUser } from '@/firebase/auth/use-user'
 
 const chartConfig = {
   sales: {
@@ -20,21 +21,22 @@ const chartConfig = {
 
 export default function PainelPage() {
   const firestore = useFirestore()
+  const { user, loading: userLoading } = useUser();
 
   const vendasQuery = useMemo(() => {
-    if (!firestore) return null
+    if (!firestore || !user) return null
     return collection(firestore, 'vendas')
-  }, [firestore])
+  }, [firestore, user])
 
   const clientesQuery = useMemo(() => {
-    if (!firestore) return null
+    if (!firestore || !user) return null
     return collection(firestore, 'clientes')
-  }, [firestore])
+  }, [firestore, user])
 
   const { data: vendas, loading: loadingVendas } = useCollection<Venda>(vendasQuery)
   const { data: clientes, loading: loadingClientes } = useCollection<Cliente>(clientesQuery)
   
-  const loading = loadingVendas || loadingClientes;
+  const loading = userLoading || loadingVendas || loadingClientes;
 
   const [totalReceita, setTotalReceita] = useState(0)
   const [totalVendas, setTotalVendas] = useState(0)
@@ -43,7 +45,7 @@ export default function PainelPage() {
   const [chartData, setChartData] = useState<{ month: string; sales: number }[]>([])
 
   useEffect(() => {
-    if (vendas.length > 0) {
+    if (vendas && vendas.length > 0) {
       const receita = vendas.reduce((acc, venda) => acc + venda.total, 0)
       const numVendas = vendas.length
       
