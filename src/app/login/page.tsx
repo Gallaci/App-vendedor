@@ -17,7 +17,7 @@ import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -71,7 +71,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -114,12 +114,13 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
             {firebaseReady ? (
-                <Badge variant="outline" className="text-green-600 border-green-600">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="border-green-600 text-green-600">
+                    <CheckCircle2 className="mr-1 h-3 w-3" />
                     Serviço de autenticação pronto
                 </Badge>
             ) : (
                 <Badge variant="destructive">
+                    <XCircle className="mr-1 h-3 w-3" />
                     Serviço de autenticação indisponível
                 </Badge>
             )}
