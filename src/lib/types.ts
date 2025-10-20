@@ -1,10 +1,12 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type Venda = {
   id: string;
   cliente: string;
   produto: string;
   quantidade: number;
   total: number;
-  data: string;
+  data: Timestamp; // Changed to Timestamp for Firestore
   status: 'Concluído' | 'Pendente' | 'Cancelado';
 };
 
@@ -26,4 +28,12 @@ export type Produto = {
   estoque: number;
   imageUrl: string;
   imageHint: string;
+};
+
+export type UserProfile = {
+  uid: string;
+  email: string;
+  displayName?: string;
+  photoURL?: string;
+  role: 'vendedor' | 'admin';
 };

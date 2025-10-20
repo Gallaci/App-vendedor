@@ -12,12 +12,13 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
 import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { doc, setDoc, getFirestore } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -26,11 +27,12 @@ export default function LoginPage() {
   const [firebaseReady, setFirebaseReady] = useState(false);
   const { app } = useFirebase();
   const auth = getAuth(app);
+  const firestore = getFirestore(app);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if(auth) {
+    if (auth) {
       setFirebaseReady(true);
     }
   }, [auth]);
@@ -54,13 +56,23 @@ export default function LoginPage() {
   const handleSignUp = async () => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create a user document in Firestore
+      await setDoc(doc(firestore, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        role: 'vendedor', // Default role for new sign-ups
+        displayName: user.displayName || user.email?.split('@')[0],
+      });
+
       toast({
         title: 'Conta Criada',
         description: 'Sua conta foi criada com sucesso. Você já pode fazer o login.',
       });
     } catch (error: any) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Erro ao Criar Conta',
         description: 'Ocorreu um erro ao criar sua conta. Verifique os dados e tente novamente.',
@@ -94,10 +106,10 @@ export default function LoginPage() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Senha</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
+            <Input
+              id="password"
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={!firebaseReady || loading}
@@ -113,17 +125,17 @@ export default function LoginPage() {
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
-            {firebaseReady ? (
-                <Badge variant="outline" className="border-green-600 text-green-600">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Serviço de autenticação pronto
-                </Badge>
-            ) : (
-                <Badge variant="destructive">
-                    <XCircle className="mr-1 h-3 w-3" />
-                    Serviço de autenticação indisponível
-                </Badge>
-            )}
+          {firebaseReady ? (
+            <Badge variant="outline" className="border-green-600 text-green-600">
+              <CheckCircle2 className="mr-1 h-3 w-3" />
+              Serviço de autenticação pronto
+            </Badge>
+          ) : (
+            <Badge variant="destructive">
+              <XCircle className="mr-1 h-3 w-3" />
+              Serviço de autenticação indisponível
+            </Badge>
+          )}
         </CardFooter>
       </Card>
     </div>

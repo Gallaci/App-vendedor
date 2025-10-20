@@ -1,3 +1,5 @@
+'use client';
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,8 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle } from "lucide-react"
-import { vendas } from "@/lib/data"
+import { MoreHorizontal, PlusCircle, Loader } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +25,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { format, parseISO } from "date-fns"
+import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { useCollection } from "@/firebase/firestore/use-collection";
+import { useFirestore } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { useMemo } from "react";
+import type { Venda } from "@/lib/types";
 
 const statusVariant = {
   'Concluído': 'default',
@@ -34,6 +40,14 @@ const statusVariant = {
 } as const;
 
 export default function VendasPage() {
+  const firestore = useFirestore();
+  const vendasQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'vendas');
+  }, [firestore]);
+
+  const { data: vendas, loading } = useCollection<Venda>(vendasQuery);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
@@ -51,58 +65,64 @@ export default function VendasPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="hidden sm:table-cell">Produto</TableHead>
-                <TableHead className="hidden md:table-cell">Data</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                <TableHead>
-                  <span className="sr-only">Ações</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vendas.map((venda) => (
-                <TableRow key={venda.id}>
-                  <TableCell>
-                    <div className="font-medium">{venda.cliente}</div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">{venda.produto}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {format(parseISO(venda.data), "dd/MM/yyyy", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="text-right">R$ {venda.total.toFixed(2)}</TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge variant={statusVariant[venda.status]}>
-                      {venda.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-                        <DropdownMenuItem>Gerar Fatura</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead className="hidden sm:table-cell">Produto</TableHead>
+                  <TableHead className="hidden md:table-cell">Data</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Ações</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {vendas.map((venda) => (
+                  <TableRow key={venda.id}>
+                    <TableCell>
+                      <div className="font-medium">{venda.cliente}</div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{venda.produto}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {format(venda.data.toDate(), "dd/MM/yyyy", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="text-right">R$ {venda.total.toFixed(2)}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant={statusVariant[venda.status] || 'default'}>
+                        {venda.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
+                          <DropdownMenuItem>Gerar Fatura</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
