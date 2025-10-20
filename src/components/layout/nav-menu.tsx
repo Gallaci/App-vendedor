@@ -11,7 +11,6 @@ const navItems = [
   { href: "/produtos", icon: Package, label: "Produtos" },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/vendas", icon: ShoppingCart, label: "Vendas" },
-  { href: "/relatorios", icon: BarChart3, label: "Relatórios" },
   { href: "/pagamentos", icon: CreditCard, label: "Pagamentos" },
 ]
 

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { AppShell } from '@/components/layout/app-shell';
 import { Toaster } from "@/components/ui/toaster"
+import { FirebaseProvider } from '@/firebase/provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'VendaMais',
@@ -13,6 +14,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
@@ -24,7 +26,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased h-full">
-        <AppShell>{children}</AppShell>
+        <FirebaseProvider>
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
+        </FirebaseProvider>
         <Toaster />
       </body>
     </html>
