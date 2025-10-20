@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Cliente": {
+      "title": "Cliente",
+      "description": "Represents a customer in the system.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the client."
+        },
+        "nome": {
+          "type": "string",
+          "description": "The client's name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The client's email address."
+        },
+        "telefone": {
+          "type": "string",
+          "description": "The client's phone number."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the client's avatar image."
+        },
+        "cidade": {
+          "type": "string",
+          "description": "The city where the client lives."
+        },
+        "totalGasto": {
+          "type": "number",
+          "description": "The total amount spent by the client."
+        }
+      },
+      "required": ["nome", "email"]
+    }
+  },
+  "auth": {
+    "providers": ["email_password"]
+  },
+  "firestore": {
+    "/clientes/{clienteId}": {
+      "schema": {
+        "$ref": "#/entities/Cliente"
+      },
+      "description": "Stores individual client documents."
+    }
+  }
+}

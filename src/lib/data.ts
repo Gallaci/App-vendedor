@@ -11,14 +11,6 @@ export const produtos: Produto[] = [
   { id: 'P005', nome: 'Cadeira Ergonômica', descricao: 'Cadeira de escritório para máximo conforto.', preco: 1299.90, estoque: 15, ...findImage('ergonomic-chair') },
 ];
 
-export const clientes: Cliente[] = [
-  { id: 'C001', nome: 'Ana Silva', email: 'ana.silva@example.com', telefone: '+5511912345678', avatarUrl: 'https://i.pravatar.cc/150?u=ana.silva', cidade: 'São Paulo', totalGasto: 1299.40 },
-  { id: 'C002', nome: 'Bruno Costa', email: 'bruno.costa@example.com', telefone: '+5521987654321', avatarUrl: 'https://i.pravatar.cc/150?u=bruno.costa', cidade: 'Rio de Janeiro', totalGasto: 899.00 },
-  { id: 'C003', nome: 'Carla Dias', email: 'carla.dias@example.com', telefone: '+5531998765432', avatarUrl: 'https://i.pravatar.cc/150?u=carla.dias', cidade: 'Belo Horizonte', totalGasto: 349.99 },
-  { id: 'C004', nome: 'Daniel Faria', email: 'daniel.faria@example.com', telefone: '+5551911223344', avatarUrl: 'https://i.pravatar.cc/150?u=daniel.faria', cidade: 'Porto Alegre', totalGasto: 1299.90 },
-  { id: 'C005', nome: 'Eduarda Lima', email: 'eduarda.lima@example.com', telefone: '+5571955667788', avatarUrl: 'https://i.pravatar.cc/150?u=eduarda.lima', cidade: 'Salvador', totalGasto: 499.50 },
-];
-
 export const vendas: Venda[] = [
   { id: 'V001', cliente: 'Ana Silva', produto: 'Relógio Inteligente', quantidade: 1, total: 799.90, data: '2024-07-20', status: 'Concluído' },
   { id: 'V002', cliente: 'Bruno Costa', produto: 'Cafeteira Expressa', quantidade: 1, total: 899.00, data: '2024-07-19', status: 'Concluído' },

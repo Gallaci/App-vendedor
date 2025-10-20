@@ -1,5 +1,5 @@
+'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -16,8 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MoreHorizontal, PlusCircle, Phone, MessageSquare } from "lucide-react"
-import { clientes } from "@/lib/data"
+import { MoreHorizontal, PlusCircle, Phone, MessageSquare, Loader } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +25,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { useCollection } from "@/firebase/firestore/use-collection";
+import { useMemo } from "react";
+import { useFirestore } from "@/firebase";
+import { collection } from "firebase/firestore";
+import type { Cliente } from "@/lib/types";
 
 export default function ClientesPage() {
+  const firestore = useFirestore();
+  const clientesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'clientes');
+  }, [firestore]);
+
+  const { data: clientes, loading } = useCollection<Cliente>(clientesQuery);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
@@ -45,6 +57,11 @@ export default function ClientesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loading ? (
+             <div className="flex justify-center items-center h-64">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+             </div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -114,6 +131,7 @@ export default function ClientesPage() {
               ))}
             </TableBody>
           </Table>
+           )}
         </CardContent>
       </Card>
     </div>
