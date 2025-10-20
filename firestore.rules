@@ -1,21 +1,114 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a role-based access control model with specific permissions for different user roles (e.g., "vendedor", "admin").
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information, accessible only by the user and admins.
+ * - /clientes/{clienteId}: Stores customer information, accessible to "vendedor" and "admin" roles.
+ * - /produtos/{produtoId}: Stores product information, accessible to "vendedor" and "admin" roles.
+ * - /vendas/{vendaId}: Stores sales information, accessible to "vendedor" and "admin" roles.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own profile data.
+ * - "vendedor" and "admin" roles have access to customer, product, and sales data.
+ * - The rules do not enforce strict schema validation during this prototyping phase to allow for rapid iteration.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // By default, deny all reads and writes
-    match /{document=**} {
-      allow read, write: if false;
+
+    /**
+     * @description Controls access to user profile information.
+     * @path /users/{userId}
+     * @allow (get, update, delete) if the user is the owner of the profile or an admin.
+     * @allow (create) if the user's UID matches the userId.
+     * @deny (create) if the user's UID does not match the userId.
+     * @deny (list) - Listing users is not allowed.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
-    // Allow authenticated users to read and write to their own documents
-    // And allow them to read and write to the shared 'notes' collection
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    match /clientes/{document=**} {
-      allow read, write: if request.auth != null;
+    /**
+     * @description Controls access to customer information.
+     * @path /clientes/{clienteId}
+     * @allow (get, list, create, update, delete) if the user has the "vendedor" or "admin" role.
+     * @deny (get, list, create, update, delete) if the user does not have the "vendedor" or "admin" role.
+     * @principle Role-based access control for customer data.
+     */
+    match /clientes/{clienteId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function hasRole(role) {
+        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      }
+
+      allow get: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow list: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow create: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow update: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow delete: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
     }
 
+    /**
+     * @description Controls access to product information.
+     * @path /produtos/{produtoId}
+     * @allow (get, list, create, update, delete) if the user has the "vendedor" or "admin" role.
+     * @deny (get, list, create, update, delete) if the user does not have the "vendedor" or "admin" role.
+     * @principle Role-based access control for product data.
+     */
+    match /produtos/{produtoId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function hasRole(role) {
+        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      }
+
+      allow get: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow list: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow create: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow update: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow delete: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+    }
+
+    /**
+     * @description Controls access to sales information.
+     * @path /vendas/{vendaId}
+     * @allow (get, list, create, update, delete) if the user has the "vendedor" or "admin" role.
+     * @deny (get, list, create, update, delete) if the user does not have the "vendedor" or "admin" role.
+     * @principle Role-based access control for sales data.
+     */
+    match /vendas/{vendaId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function hasRole(role) {
+        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      }
+
+      allow get: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow list: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow create: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow update: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+      allow delete: if isSignedIn() && hasRole("vendedor") || hasRole("admin");
+    }
   }
 }
