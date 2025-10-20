@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -15,15 +16,24 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } f
 import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [firebaseReady, setFirebaseReady] = useState(false);
   const { app } = useFirebase();
   const auth = getAuth(app);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if(auth) {
+      setFirebaseReady(true);
+    }
+  }, [auth]);
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -34,7 +44,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Erro de Login',
-        description: error.message,
+        description: 'Verifique seu e-mail e senha.',
       });
     } finally {
       setLoading(false);
@@ -53,7 +63,7 @@ export default function LoginPage() {
        toast({
         variant: 'destructive',
         title: 'Erro ao Criar Conta',
-        description: error.message,
+        description: 'Ocorreu um erro ao criar sua conta. Verifique os dados e tente novamente.',
       });
     } finally {
       setLoading(false);
@@ -79,6 +89,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={!firebaseReady || loading}
             />
           </div>
           <div className="grid gap-2">
@@ -89,17 +100,30 @@ export default function LoginPage() {
               required 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={!firebaseReady || loading}
             />
           </div>
         </CardContent>
         <CardContent className="grid gap-2">
-          <Button onClick={handleSignIn} className="w-full" disabled={loading}>
+          <Button onClick={handleSignIn} className="w-full" disabled={!firebaseReady || loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
-          <Button onClick={handleSignUp} variant="outline" className="w-full" disabled={loading}>
+          <Button onClick={handleSignUp} variant="outline" className="w-full" disabled={!firebaseReady || loading}>
             {loading ? 'Criando...' : 'Criar conta'}
           </Button>
         </CardContent>
+        <CardFooter className="flex justify-center">
+            {firebaseReady ? (
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Serviço de autenticação pronto
+                </Badge>
+            ) : (
+                <Badge variant="destructive">
+                    Serviço de autenticação indisponível
+                </Badge>
+            )}
+        </CardFooter>
       </Card>
     </div>
   );
