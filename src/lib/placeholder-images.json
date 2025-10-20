@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "smart-watch",
+      "description": "A modern smart watch on display.",
+      "imageUrl": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzbWFydCUyMHdhdGNofGVufDB8fHx8MTc2MDk1MzcxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smart watch"
+    },
+    {
+      "id": "wireless-headphones",
+      "description": "Sleek wireless headphones.",
+      "imageUrl": "https://images.unsplash.com/photo-1598331668826-20cecc596b86?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3aXJlbGVzcyUyMGhlYWRwaG9uZXN8ZW58MHx8fHwxNzYwODYwOTA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wireless headphones"
+    },
+    {
+      "id": "coffee-maker",
+      "description": "An automatic coffee maker.",
+      "imageUrl": "https://images.unsplash.com/photo-1569161238483-4c6375c59d68?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb2ZmZWUlMjBtYWtlcnxlbnwwfHx8fDE3NjA5NjU4OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coffee maker"
+    },
+    {
+      "id": "leather-backpack",
+      "description": "A stylish leather backpack.",
+      "imageUrl": "https://images.unsplash.com/photo-1569397592157-3ef5ee016cf6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxsZWF0aGVyJTIwYmFja3BhY2t8ZW58MHx8fHwxNzYwOTY4MTE2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "leather backpack"
+    },
+    {
+      "id": "ergonomic-chair",
+      "description": "A comfortable ergonomic office chair.",
+      "imageUrl": "https://images.unsplash.com/photo-1683836810074-209ee2a9d353?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxlcmdvbm9taWMlMjBjaGFpcnxlbnwwfHx8fDE3NjA5NzUxMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ergonomic chair"
+    }
+  ]
 }
