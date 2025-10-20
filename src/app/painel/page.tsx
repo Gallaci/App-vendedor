@@ -1,17 +1,15 @@
 'use client'
+import { useMemo, useState, useEffect } from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { ArrowUp, Users, ShoppingCart, DollarSign } from 'lucide-react'
-
-const chartData = [
-  { month: 'Jan', sales: 186 },
-  { month: 'Fev', sales: 305 },
-  { month: 'Mar', sales: 237 },
-  { month: 'Abr', sales: 173 },
-  { month: 'Mai', sales: 209 },
-  { month: 'Jun', sales: 214 },
-]
+import { ArrowUp, Users, ShoppingCart, DollarSign, Loader } from 'lucide-react'
+import { useCollection } from '@/firebase/firestore/use-collection'
+import { useFirestore } from '@/firebase'
+import { collection } from 'firebase/firestore'
+import type { Venda, Cliente } from '@/lib/types'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 const chartConfig = {
   sales: {
@@ -21,6 +19,80 @@ const chartConfig = {
 }
 
 export default function PainelPage() {
+  const firestore = useFirestore()
+
+  const vendasQuery = useMemo(() => {
+    if (!firestore) return null
+    return collection(firestore, 'vendas')
+  }, [firestore])
+
+  const clientesQuery = useMemo(() => {
+    if (!firestore) return null
+    return collection(firestore, 'clientes')
+  }, [firestore])
+
+  const { data: vendas, loading: loadingVendas } = useCollection<Venda>(vendasQuery)
+  const { data: clientes, loading: loadingClientes } = useCollection<Cliente>(clientesQuery)
+  
+  const loading = loadingVendas || loadingClientes;
+
+  const [totalReceita, setTotalReceita] = useState(0)
+  const [totalVendas, setTotalVendas] = useState(0)
+  const [totalClientes, setTotalClientes] = useState(0)
+  const [ticketMedio, setTicketMedio] = useState(0)
+  const [chartData, setChartData] = useState<{ month: string; sales: number }[]>([])
+
+  useEffect(() => {
+    if (vendas.length > 0) {
+      const receita = vendas.reduce((acc, venda) => acc + venda.total, 0)
+      const numVendas = vendas.length
+      
+      setTotalReceita(receita)
+      setTotalVendas(numVendas)
+      setTicketMedio(numVendas > 0 ? receita / numVendas : 0)
+
+      const salesByMonth = vendas.reduce((acc, venda) => {
+        if (venda.data) {
+          const month = format(venda.data.toDate(), 'MMM', { locale: ptBR });
+          acc[month] = (acc[month] || 0) + venda.total;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+
+      const formattedChartData = Object.keys(salesByMonth).map(month => ({
+        month,
+        sales: salesByMonth[month],
+      }));
+      
+      // Simple sort for months - a more robust solution would be needed for a full year
+      const monthOrder = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+      formattedChartData.sort((a, b) => monthOrder.indexOf(a.month.toLowerCase()) - monthOrder.indexOf(b.month.toLowerCase()));
+
+      setChartData(formattedChartData);
+
+    } else {
+        setTotalReceita(0);
+        setTotalVendas(0);
+        setTicketMedio(0);
+        setChartData([]);
+    }
+  }, [vendas])
+
+  useEffect(() => {
+    if (clientes) {
+      setTotalClientes(clientes.length)
+    }
+  }, [clientes])
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full -mt-14">
+        <Loader className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -30,9 +102,9 @@ export default function PainelPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 45.231,89</div>
+            <div className="text-2xl font-bold">R$ {totalReceita.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <ArrowUp className="h-3 w-3 text-green-500" /> +20.1% em relação ao mês passado
+              Calculado a partir de todas as vendas
             </p>
           </CardContent>
         </Card>
@@ -42,21 +114,21 @@ export default function PainelPage() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
+            <div className="text-2xl font-bold">+{totalVendas}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <ArrowUp className="h-3 w-3 text-green-500" /> +180.1% em relação ao mês passado
+              Total de vendas registradas
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Novos Clientes</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+128</div>
+            <div className="text-2xl font-bold">+{totalClientes}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <ArrowUp className="h-3 w-3 text-green-500" /> +19% em relação ao mês passado
+             Total de clientes cadastrados
             </p>
           </CardContent>
         </Card>
@@ -66,9 +138,9 @@ export default function PainelPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">R$ 124,50</div>
+                <div className="text-2xl font-bold">R$ {ticketMedio.toFixed(2)}</div>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <ArrowUp className="h-3 w-3 text-green-500" /> +5.2% em relação ao mês passado
+                Valor médio por venda
                 </p>
             </CardContent>
         </Card>
@@ -77,7 +149,7 @@ export default function PainelPage() {
       <Card>
         <CardHeader>
           <CardTitle>Visão Geral de Vendas</CardTitle>
-          <CardDescription>Um resumo das vendas nos últimos 6 meses.</CardDescription>
+          <CardDescription>Um resumo das vendas agrupadas por mês.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -88,7 +160,6 @@ export default function PainelPage() {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) => value.slice(0, 3)}
               />
               <ChartTooltip
                 cursor={false}
