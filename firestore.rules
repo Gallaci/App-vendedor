@@ -1,117 +1,116 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a role-based access control model with user-specific data isolation.
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a combination of user-ownership and role-based access control.
+ * User profiles are private and only accessible to the owning user.
+ * Clients, Products, and Sales are publicly readable, but writes are restricted.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information. Access is restricted to the user themselves.
- * - /clientes/{clienteId}: Stores client information. Listing is restricted to administrators, and creation, updates, and deletes are restricted to administrators only.
- * - /produtos/{produtoId}: Stores product information. Listing is restricted to administrators, and creation, updates, and deletes are restricted to administrators only.
- * - /vendas/{vendaId}: Stores sale information. Listing is restricted to administrators, and creation, updates, and deletes are restricted to administrators only.
+ * - /users/{userId}: Stores user profile information.
+ * - /clientes/{clienteId}: Stores client data.
+ * - /produtos/{produtoId}: Stores product data.
+ * - /vendas/{vendaId}: Stores sales data.
  *
  * Key Security Decisions:
- * - User profiles are private and only accessible to the owning user.
- * - Listing of users is disallowed.
- * - Clients, Products, and Sales are only accessible by administrators.
+ * - User listing is disallowed.
+ * - Clients, products, and sales are publicly readable to allow for open browsing.
+ * - Only authenticated users can create, update or delete clients, products and sales.
+ *
+ * Denormalization for Authorization:
+ *  No explicit denormalization is used in this basic prototype.
+ *  In a production system, consider adding creatorId or ownerId fields to
+ *  /clientes, /produtos, and /vendas to simplify write authorization rules and improve performance.
+ *
+ * Structural Segregation:
+ *  The application does not explicitly segregate public and private data.
+ *  If drafts or private versions of products/sales are required, create separate
+ *  collections under the /users/{userId} path (e.g., /users/{userId}/draft_products/{productId}).
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
-     * @return {boolean} True if the user is signed in, false otherwise.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the user is the owner of the resource.
-     * @param {string} userId - The user ID to compare against the request's auth UID.
-     * @return {boolean} True if the user is the owner, false otherwise.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the user is an admin.
-     * @return {boolean} True if the user has the 'admin' role, false otherwise.
-     */
-    function isAdmin() {
-        return isSignedIn() && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-    }
-
-    /**
-     * @description Checks if the user is an existing owner of the resource.
-     * @param {string} userId - The user ID to compare against the request's auth UID.
-     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Enforces access control for user profiles.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (get, create, update, delete, list) if the user is the owner.
-     * @deny (get) if the user is not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) Authenticated user can create their own profile.
+     * @allow (get, update, delete) Authenticated user can access their own profile.
+     * @deny (list) User listing is not allowed.
+     * @deny (create) Non-authenticated user.
+     * @deny (update, delete) Attempt to modify another user's profile.
+     * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Listing users is not allowed.
-      allow create: if isOwner(userId) && request.resource.data.uid == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces access control for clients.
+     * @description Controls access to client documents.
      * @path /clientes/{clienteId}
-     * @allow (list) if the user is an admin.
-     * @allow (create, update, delete) if the user is an admin.
-     * @deny (get, list, create, update, delete) if the user is not an admin.
-     * @principle Restricts access to clients to administrators only.
+     * @allow (get, list) Any user can read client data.
+     * @allow (create) Authenticated user can create client data.
+     * @allow (update, delete) Authenticated user can modify client data.
+     * @deny (create) Non-authenticated user.
+     * @deny (update, delete) Non-authenticated user.
+     * @principle Allows public read access but restricts writes to authenticated users.
      */
     match /clientes/{clienteId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Enforces access control for products.
+     * @description Controls access to product documents.
      * @path /produtos/{produtoId}
-     * @allow (list) if the user is an admin.
-     * @allow (create, update, delete) if the user is an admin.
-     * @deny (get, list, create, update, delete) if the user is not an admin.
-     * @principle Restricts access to products to administrators only.
+     * @allow (get, list) Any user can read product data.
+     * @allow (create) Authenticated user can create product data.
+     * @allow (update, delete) Authenticated user can modify product data.
+     * @deny (create) Non-authenticated user.
+     * @deny (update, delete) Non-authenticated user.
+     * @principle Allows public read access but restricts writes to authenticated users.
      */
     match /produtos/{produtoId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Enforces access control for sales.
+     * @description Controls access to sale documents.
      * @path /vendas/{vendaId}
-     * @allow (list) if the user is an admin.
-     * @allow (create, update, delete) if the user is an admin.
-     * @deny (get, list, create, update, delete) if the user is not an admin.
-     * @principle Restricts access to sales to administrators only.
+     * @allow (get, list) Any user can read sale data.
+     * @allow (create) Authenticated user can create sale data.
+     * @allow (update, delete) Authenticated user can modify sale data.
+     * @deny (create) Non-authenticated user.
+     * @deny (update, delete) Non-authenticated user.
+     * @principle Allows public read access but restricts writes to authenticated users.
      */
     match /vendas/{vendaId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
+  }
+
+  // Helper Functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+    function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }
