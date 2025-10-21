@@ -2,106 +2,88 @@
  * @fileoverview Firestore Security Rules for Prototyping.
  *
  * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict access control based on user roles and ownership.
- * It allows for rapid prototyping by relaxing data validation constraints.
+ * This ruleset prioritizes security by enforcing strict user-based authorization.
+ * It avoids overly strict schema validation to facilitate rapid prototyping and data exploration.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information. Access is restricted to the owning user.
- * - /clients/{clientId}: Stores client data.  Read and write access is open to all authenticated users.
- * - /produtos/{produtoId}: Stores product data. Read and write access is open to all authenticated users.
- * - /vendas/{vendaId}: Stores sale data.  Read and write access is open to all authenticated users.
+ * - /users/{userId}: Stores user profile information. Only the authenticated user can access their own profile.
+ * - /clients/{clientId}: Stores client data. Only authenticated users can access this collection.
+ * - /propostas/{propostaId}: Stores sales proposal data. Only authenticated users can access this collection.
  *
  * Key Security Decisions:
- * - User profiles are private and only accessible to the owning user.
- * - Listing of user documents is disallowed to protect user privacy.
- * - The "clients", "produtos", and "vendas" collections are open to authenticated users.
+ * - User listing is disallowed.
+ * - Data validation is minimal, focusing on authorization-critical fields.
+ * - All write operations require a verified authenticated user.
  *
  * Denormalization for Authorization:
- *  None needed in this ruleset.
+ *  - The `UserProfile` entity includes a `role` field to avoid needing to look up roles in a separate collection.
+ *  - The `Proposta` and `Cliente` entities do not contain a user ID to link who created the content.
  *
  * Structural Segregation:
- * Not applicable in this ruleset.
+ *  - Public and private data are not mixed within the same collection. User profiles are stored under `/users/{userId}`, ensuring private access.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the authenticated user can read/write their own profile.
+     * @description Secures user profile documents.
      * @path /users/{userId}
-     * @allow (create) - User with uid 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
-     * @allow (get, update, delete) - User with uid 'user_abc' can get, update, or delete their profile.
-     * @deny (create, get, update, delete) - Any other user cannot access this profile.
-     * @principle Enforces user-ownership for user profiles.
+     * @allow (create) If the user's auth UID matches the userId, allowing self-creation.
+     * @allow (get, update, delete) If the user is the owner of the profile.
+     * @deny (list) Listing all users is not allowed.
+     * @deny (create, update, delete) If the user is not authenticated.
+     * @principle Enforces document ownership and prevents unauthorized access to user profiles.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Allow a user to create their own profile if the userId matches their auth.uid
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
-
-      // Allow reading, updating, and deleting only by the owner.
-      allow get, update, delete: if isSignedIn() && isOwner(userId) && resource.data.uid == userId;
-
-      // Prevent listing of all users
+      allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description Allow all authenticated users to read and write client data.
+     * @description Secures client documents.
      * @path /clients/{clientId}
-     * @allow (get, list) - Any authenticated user can read client data.
-     * @allow (create, update, delete) - Any authenticated user can create, update, or delete client data.
-     * @deny  (create, update, delete) - If the user is not signed in.
-     * @principle Allows open read and write access for authenticated users to the "clients" collection.
+     * @allow (create, get, list, update, delete) If the user is authenticated.
+     * @deny If the user is not authenticated.
+     * @principle Requires authentication for any data access to the clients collection.
      */
     match /clients/{clientId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Allow all authenticated users to read and write product data.
-     * @path /produtos/{produtoId}
-     * @allow (get, list) - Any authenticated user can read product data.
-     * @allow (create, update, delete) - Any authenticated user can create, update, or delete product data.
-     * @deny  (create, update, delete) - If the user is not signed in.
-     * @principle Allows open read and write access for authenticated users to the "produtos" collection.
+     * @description Secures sales proposal documents.
+     * @path /propostas/{propostaId}
+     * @allow (create, get, list, update, delete) If the user is authenticated.
+     * @deny If the user is not authenticated.
+     * @principle Requires authentication for any data access to the proposals collection.
      */
-    match /produtos/{produtoId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
+    match /propostas/{propostaId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
-    /**
-     * @description Allow all authenticated users to read and write sale data.
-     * @path /vendas/{vendaId}
-     * @allow (get, list) - Any authenticated user can read sale data.
-     * @allow (create, update, delete) - Any authenticated user can create, update, or delete sale data.
-     * @deny  (create, update, delete) - If the user is not signed in.
-     * @principle Allows open read and write access for authenticated users to the "vendas" collection.
-     */
-    match /vendas/{vendaId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn();
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+        return isSignedIn() && isOwner(userId) && resource != null;
     }
   }
 }
