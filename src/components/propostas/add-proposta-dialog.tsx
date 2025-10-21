@@ -79,21 +79,15 @@ const defaultItemValues = {
 };
 
 function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
-    const itemTipo = useWatch({
+    const item = useWatch({
         control,
-        name: `itens.${index}.tipo` as const,
-        defaultValue: (control as any)._formValues.itens?.[index]?.tipo || 'Projeto'
+        name: `itens.${index}` as const,
     });
+    const itemTipo = item.tipo;
 
-    useEffect(() => {
-        if (itemTipo) {
-            const currentItem = (control as any)._formValues.itens[index];
-            // Only reset if the type is actually different
-            if (currentItem.tipo !== itemTipo) {
-                setValue(`itens.${index}`, defaultItemValues[itemTipo]);
-            }
-        }
-    }, [itemTipo, index, setValue, control]);
+    const handleTypeChange = (newType: 'Projeto' | 'Licenca' | 'Contrato') => {
+        setValue(`itens.${index}`, defaultItemValues[newType]);
+    };
 
     return (
         <div className="p-4 border rounded-md relative mb-4 space-y-4">
@@ -110,10 +104,10 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
             <FormField
                 control={control}
                 name={`itens.${index}.tipo`}
-                render={({ field: fieldType }) => (
+                render={({ field }) => (
                     <FormItem>
                         <FormLabel>Tipo de Item</FormLabel>
-                        <Select onValueChange={fieldType.onChange} defaultValue={fieldType.value}>
+                        <Select onValueChange={(value: 'Projeto' | 'Licenca' | 'Contrato') => handleTypeChange(value)} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="Projeto">Projeto</SelectItem>
@@ -128,10 +122,10 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
 
             {itemTipo === 'Projeto' && (
                 <>
-                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field }) => (
                         <FormItem>
                             <FormLabel>Nome do Projeto</FormLabel>
-                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="Projeto 1">Projeto 1</SelectItem>
@@ -143,11 +137,11 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
                         </FormItem>
                     )}/>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField control={control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
-                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="1500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.valor`} render={({ field }) => (
+                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="1500.00" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
                 </>
@@ -155,10 +149,10 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
 
             {itemTipo === 'Licenca' && (
                 <>
-                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field }) => (
                         <FormItem>
                             <FormLabel>Nome da Licença</FormLabel>
-                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="Licença 1">Licença 1</SelectItem>
@@ -170,19 +164,19 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
                         </FormItem>
                     )}/>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField control={control} name={`itens.${index}.valorCliente`} render={({ field: fieldVal }) => (
-                            <FormItem><FormLabel>Valor p/ Cliente (R$)</FormLabel><FormControl><Input type="number" placeholder="250.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.valorCliente`} render={({ field }) => (
+                            <FormItem><FormLabel>Valor p/ Cliente (R$)</FormLabel><FormControl><Input type="number" placeholder="250.00" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField control={control} name={`itens.${index}.margemRecorrente`} render={({ field: fieldMr }) => (
-                            <FormItem><FormLabel>Margem Recorrente (R$)</FormLabel><FormControl><Input type="number" placeholder="50.00" step="0.01" {...fieldMr} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.margemRecorrente`} render={({ field }) => (
+                            <FormItem><FormLabel>Margem Recorrente (R$)</FormLabel><FormControl><Input type="number" placeholder="50.00" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField control={control} name={`itens.${index}.margemAvulso`} render={({ field: fieldMa }) => (
-                            <FormItem><FormLabel>Margem Avulsa (R$)</FormLabel><FormControl><Input type="number" placeholder="100.00" step="0.01" {...fieldMa} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.margemAvulso`} render={({ field }) => (
+                            <FormItem><FormLabel>Margem Avulsa (R$)</FormLabel><FormControl><Input type="number" placeholder="100.00" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
                 </>
@@ -190,10 +184,10 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
 
             {itemTipo === 'Contrato' && (
                 <>
-                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field }) => (
                         <FormItem>
                             <FormLabel>Nome do Contrato</FormLabel>
-                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     <SelectItem value="Contrato 1">Contrato 1</SelectItem>
@@ -205,11 +199,11 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
                         </FormItem>
                     )}/>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
-                        <FormField control={control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
-                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        <FormField control={control} name={`itens.${index}.valor`} render={({ field }) => (
+                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="500.00" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>
                         )}/>
                     </div>
                 </>
@@ -370,7 +364,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                     >
                         Adicionar Item
                     </Button>
-                     <FormMessage>{form.formState.errors.itens?.message}</FormMessage>
+                     <FormMessage>{form.formState.errors.itens?.root?.message || form.formState.errors.itens?.message}</FormMessage>
                 </div>
             </div>
             
