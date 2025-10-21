@@ -1,16 +1,35 @@
+'use client';
 import { Timestamp } from 'firebase/firestore';
 
 export type PropostaStatus = 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
 
-export type Proposta = {
+export type PropostaBase = {
   id: string;
   cliente: string;
-  produto: string;
-  quantidade: number;
-  total: number;
   data: Timestamp;
   status: PropostaStatus;
 };
+
+export type PropostaProjeto = PropostaBase & {
+  tipo: 'Projeto';
+  nomeProjeto: 'Projeto 1' | 'Projeto 2' | 'Projeto 3';
+  quantidade: number;
+  valorProjeto: number;
+  total: number;
+};
+
+export type PropostaLicenca = PropostaBase & {
+  tipo: 'Licenca';
+  nomeLicenca: 'Licença 1' | 'Licença 2' | 'Licença 3';
+  quantidade: number;
+  valorCliente: number;
+  margemRecorrente: number;
+  margemAvulso: number;
+  total: number;
+};
+
+export type Proposta = PropostaProjeto | PropostaLicenca;
+
 
 export type Cliente = {
   id: string;

@@ -31,7 +31,7 @@ import { ptBR } from "date-fns/locale"
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
-import type { Proposta } from "@/lib/types";
+import type { Proposta, PropostaLicenca, PropostaProjeto } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { AddPropostaDialog } from "@/components/propostas/add-proposta-dialog";
 import { updatePropostaStatus } from "@/firebase/firestore/propostas";
@@ -74,6 +74,17 @@ export default function PropostasPage() {
       });
     }
   };
+
+  const getProdutoServico = (proposta: Proposta) => {
+    if (proposta.tipo === 'Projeto') {
+      return (proposta as PropostaProjeto).nomeProjeto;
+    }
+    if (proposta.tipo === 'Licenca') {
+      return (proposta as PropostaLicenca).nomeLicenca;
+    }
+    return 'N/A';
+  }
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -118,7 +129,7 @@ export default function PropostasPage() {
                     <TableCell>
                       <div className="font-medium">{proposta.cliente}</div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{proposta.produto}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{getProdutoServico(proposta)}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       {proposta.data ? format(proposta.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
                     </TableCell>

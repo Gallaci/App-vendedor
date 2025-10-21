@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { LayoutDashboard, LogOut, Settings, Users, FileText, ClipboardList } from "lucide-react"
+import { LayoutDashboard, LogOut, Settings, Users, FileText, ClipboardList, DollarSign } from "lucide-react"
 
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
 import { useActivePath } from "@/hooks/use-active-path"
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/painel", icon: LayoutDashboard, label: "Painel" },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/propostas", icon: FileText, label: "Propostas" },
+  { href: "/vendas", icon: DollarSign, label: "Vendas" },
   { href: "/atividades", icon: ClipboardList, label: "Atividades" },
 ]
 

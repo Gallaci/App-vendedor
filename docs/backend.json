@@ -84,13 +84,19 @@
       "properties": {
         "id": { "type": "string" },
         "cliente": { "type": "string" },
-        "produto": { "type": "string" },
-        "quantidade": { "type": "number" },
-        "total": { "type": "number" },
         "data": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Pendente", "Aprovada", "Rejeitada", "Convertida em Venda"] }
+        "status": { "type": "string", "enum": ["Pendente", "Aprovada", "Rejeitada", "Convertida em Venda"] },
+        "tipo": { "type": "string", "enum": ["Projeto", "Licenca"] },
+        "nomeProjeto": { "type": "string", "enum": ["Projeto 1", "Projeto 2", "Projeto 3"] },
+        "valorProjeto": { "type": "number" },
+        "nomeLicenca": { "type": "string", "enum": ["Licença 1", "Licença 2", "Licença 3"] },
+        "valorCliente": { "type": "number" },
+        "margemRecorrente": { "type": "number" },
+        "margemAvulso": { "type": "number" },
+        "quantidade": { "type": "number" },
+        "total": { "type": "number" }
       },
-      "required": ["cliente", "produto", "total", "data", "status"]
+      "required": ["cliente", "data", "status", "tipo", "total"]
     },
     "Atividade": {
       "title": "Atividade",

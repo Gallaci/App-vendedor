@@ -48,7 +48,7 @@ export default function PainelPage() {
   useEffect(() => {
     if (propostas && propostas.length > 0) {
       const vendasConvertidas = propostas.filter(p => p.status === 'Convertida em Venda');
-      const receita = vendasConvertidas.reduce((acc, proposta) => acc + proposta.total, 0)
+      const receita = vendasConvertidas.reduce((acc, proposta) => acc + (proposta.total || 0), 0)
       const numVendas = vendasConvertidas.length
 
       setTotalReceita(receita)
@@ -59,7 +59,7 @@ export default function PainelPage() {
       const salesByMonth = vendasConvertidas.reduce((acc, proposta) => {
         if (proposta.data) {
           const month = format(proposta.data.toDate(), 'MMM', { locale: ptBR });
-          acc[month] = (acc[month] || 0) + proposta.total;
+          acc[month] = (acc[month] || 0) + (proposta.total || 0);
         }
         return acc;
       }, {} as Record<string, number>);
