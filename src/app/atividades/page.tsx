@@ -128,16 +128,16 @@ function TabLigacoes() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="contato"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome da Empresa/Contato</FormLabel>
+                    <FormLabel className="text-sm">Nome da Empresa/Contato</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: João da Silva" {...field} />
+                      <Input className="text-sm" placeholder="Ex: João da Silva" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,9 +148,9 @@ function TabLigacoes() {
                 name="telefone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone</FormLabel>
+                    <FormLabel className="text-sm">Telefone</FormLabel>
                     <FormControl>
-                      <Input placeholder="(99) 99999-9999" {...field} />
+                      <Input className="text-sm" placeholder="(99) 99999-9999" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,9 +161,9 @@ function TabLigacoes() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-sm">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="contato@empresa.com" {...field} />
+                      <Input className="text-sm" placeholder="contato@empresa.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,7 +175,7 @@ function TabLigacoes() {
                 control={form.control}
                 name="atendida"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -183,7 +183,7 @@ function TabLigacoes() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
+                      <FormLabel className="text-sm font-normal">
                         Ligação Atendida?
                       </FormLabel>
                     </div>
@@ -194,7 +194,7 @@ function TabLigacoes() {
                 control={form.control}
                 name="reuniaoAgendada"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -202,7 +202,7 @@ function TabLigacoes() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
+                      <FormLabel className="text-sm font-normal">
                         Reunião Agendada (Lead Out)?
                       </FormLabel>
                     </div>
@@ -213,7 +213,7 @@ function TabLigacoes() {
                 control={form.control}
                 name="apresentacaoEnviada"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -221,7 +221,7 @@ function TabLigacoes() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
+                      <FormLabel className="text-sm font-normal">
                         Apresentação Enviada?
                       </FormLabel>
                     </div>
@@ -234,11 +234,11 @@ function TabLigacoes() {
               name="anotacoes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Anotações</FormLabel>
+                  <FormLabel className="text-sm">Anotações</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Detalhes sobre a conversa, próximos passos, etc."
-                      className="resize-none"
+                      className="resize-none text-sm"
                       {...field}
                     />
                   </FormControl>
@@ -300,27 +300,27 @@ function TabLeadInbound() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField name="nome" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome do Cliente</FormLabel>
-                    <FormControl><Input placeholder="Ex: Maria Souza" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Nome do Cliente</FormLabel>
+                    <FormControl><Input className="text-sm" placeholder="Ex: Maria Souza" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField name="contato" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone ou E-mail</FormLabel>
-                    <FormControl><Input placeholder="(99) 99999-9999 ou maria@email.com" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Telefone ou E-mail</FormLabel>
+                    <FormControl><Input className="text-sm" placeholder="(99) 99999-9999 ou maria@email.com" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField name="anotacoes" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anotações</FormLabel>
-                    <FormControl><Textarea placeholder="Sobre o que o cliente falou?" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Anotações</FormLabel>
+                    <FormControl><Textarea className="text-sm" placeholder="Sobre o que o cliente falou?" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -379,19 +379,19 @@ function TabReunioes() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField name="cliente" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome do Cliente/Empresa</FormLabel>
-                    <FormControl><Input placeholder="Ex: Empresa XPTO" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Nome do Cliente/Empresa</FormLabel>
+                    <FormControl><Input className="text-sm" placeholder="Ex: Empresa XPTO" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField name="anotacoes" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anotações da Reunião</FormLabel>
-                    <FormControl><Textarea placeholder="Pontos discutidos, próximos passos, etc." {...field} /></FormControl>
+                    <FormLabel className="text-sm">Anotações da Reunião</FormLabel>
+                    <FormControl><Textarea className="text-sm" placeholder="Pontos discutidos, próximos passos, etc." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -450,19 +450,19 @@ function TabAvaliacoes() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField name="cliente" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome do Cliente</FormLabel>
-                    <FormControl><Input placeholder="Ex: Joana" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Nome do Cliente</FormLabel>
+                    <FormControl><Input className="text-sm" placeholder="Ex: Joana" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField name="feedback" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Feedback Recebido</FormLabel>
-                    <FormControl><Textarea placeholder="Descreva o feedback recebido." {...field} /></FormControl>
+                    <FormLabel className="text-sm">Feedback Recebido</FormLabel>
+                    <FormControl><Textarea className="text-sm" placeholder="Descreva o feedback recebido." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -647,7 +647,7 @@ export default function AtividadesPage() {
       </div>
 
       <Tabs defaultValue="ligacoes" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           <TabsTrigger value="ligacoes">Ligações</TabsTrigger>
           <TabsTrigger value="lead-inbound">Lead Inbound</TabsTrigger>
           <TabsTrigger value="reunioes">Reuniões</TabsTrigger>
