@@ -90,10 +90,10 @@ export default function ClientesPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="hidden h-9 w-9 sm:flex">
                         <AvatarImage src={cliente.avatarUrl} alt="Avatar" />
-                        <AvatarFallback>{cliente.nome ? cliente.nome.charAt(0) : 'C'}</AvatarFallback>
+                        <AvatarFallback>{cliente.name ? cliente.name.charAt(0) : 'C'}</AvatarFallback>
                       </Avatar>
                       <div className="grid gap-0.5">
-                        <p className="font-medium">{cliente.nome || 'Nome não informado'}</p>
+                        <p className="font-medium">{cliente.name || 'Nome não informado'}</p>
                         <p className="text-xs text-muted-foreground hidden md:block">{cliente.email}</p>
                       </div>
                     </div>

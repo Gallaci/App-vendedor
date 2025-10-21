@@ -12,12 +12,14 @@ export type Venda = {
 
 export type Cliente = {
   id: string;
-  nome: string;
+  name: string; // Changed from 'nome'
   email: string;
-  telefone: string;
-  avatarUrl: string;
-  cidade: string;
-  totalGasto: number;
+  telefone?: string;
+  avatarUrl?: string;
+  cidade?: string;
+  totalGasto?: number;
+  createdAt?: Timestamp;
+  createdBy?: string;
 };
 
 export type Produto = {

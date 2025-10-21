@@ -25,14 +25,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useFirestore } from '@/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { addCliente } from '@/firebase/firestore/clientes';
 
 const formSchema = z.object({
-  nome: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
+  name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
   telefone: z.string().optional(),
   cidade: z.string().optional(),
@@ -49,12 +49,13 @@ interface AddClienteDialogProps {
 export function AddClienteDialog({ children, open, onOpenChange }: AddClienteDialogProps) {
   const [loading, setLoading] = useState(false);
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   
   const form = useForm<AddClienteFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: '',
+      name: '',
       email: '',
       telefone: '',
       cidade: '',
@@ -62,12 +63,23 @@ export function AddClienteDialog({ children, open, onOpenChange }: AddClienteDia
   });
 
   const onSubmit = async (values: AddClienteFormValues) => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro!',
+            description: 'Você precisa estar logado para adicionar um cliente.',
+        });
+        return;
+    }
+
     setLoading(true);
     try {
         const newClienteData = {
             ...values,
             totalGasto: 0,
-            avatarUrl: `https://i.pravatar.cc/150?u=${values.email}`
+            avatarUrl: `https://i.pravatar.cc/150?u=${values.email}`,
+            createdAt: serverTimestamp(),
+            createdBy: user.email,
         };
       await addCliente(firestore, newClienteData);
 
@@ -103,7 +115,7 @@ export function AddClienteDialog({ children, open, onOpenChange }: AddClienteDia
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
             <FormField
               control={form.control}
-              name="nome"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nome</FormLabel>

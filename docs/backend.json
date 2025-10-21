@@ -40,7 +40,7 @@
           "type": "string",
           "description": "Unique identifier for the client."
         },
-        "nome": {
+        "name": {
           "type": "string",
           "description": "The client's name."
         },
@@ -65,9 +65,17 @@
         "totalGasto": {
           "type": "number",
           "description": "The total amount spent by the client."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "email"
         }
       },
-      "required": ["nome", "email"]
+      "required": ["name", "email"]
     },
     "Produto": {
       "title": "Produto",
