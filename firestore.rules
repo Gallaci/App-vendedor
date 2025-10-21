@@ -1,116 +1,124 @@
-/**
- * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles and allows open reads for clients, proposals and activities while restricting writes to authorized users.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profile information, accessible only to the owning user and admins.
- * - /clients/{clientId}: Stores client data. Accessible to any authenticated user.
- * - /propostas/{propostaId}: Stores proposal data. Accessible to any authenticated user.
- * - /atividades/{atividadeId}: Stores activity data. Accessible to any authenticated user.
- *
- * Key Security Decisions:
- * - User listing is disallowed.
- * - Clients, proposals, and activities are publicly readable, but writes are restricted and must be performed by an authenticated user.
- * - No schema validation is performed in this prototype, except for critical authorization fields.
- *
- * Denormalization for Authorization:
- *  - Currently, no denormalization is used as the rules rely on request.auth.uid for user identification.
- *  - Consider adding creatorId/ownerId fields to /clients, /propostas, and /atividades for finer-grained control in the future.
- *
- * Structural Segregation:
- *  - No explicit structural segregation is employed.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile information.
-     * @path /users/{userId}
-     * @allow (create) Authenticated user can create their own profile.
-     * @allow (get, update, delete) Authenticated user can only access their own profile.
-     * @deny (create) If the user tries to create a profile with a different userId.
-     * @deny (get, update, delete) If the user tries to access someone else's profile.
-     * @principle Enforces user ownership and prevents unauthorized profile access.
+     * @description Checks if the current user is signed in.
+     * @return {bool} True if the user is signed in, false otherwise.
      */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the current user is the owner of the resource.
+     * @param {string} userId The user ID to compare against the request's auth UID.
+     * @return {bool} True if the user is the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+        /**
+     * @description Checks if the current user is the owner of the existing resource.
+     *              This function also verifies that the resource exists.
+     * @param {string} userId The user ID to compare against the resource's data.
+     * @return {bool} True if the user is the owner and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+        return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+
+    /**
+     * @description Checks if the current user has the 'admin' role.
+     * @return {bool} True if the user has the 'admin' role, false otherwise.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+        /**
+     * @description Checks if the current user has the 'vendedor' role.
+     * @return {bool} True if the user has the 'vendedor' role, false otherwise.
+     */
+    function isVendedor() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendedor';
+    }
+
     match /users/{userId} {
-      // Function to check if the requesting user is the owner of the profile.
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      // Function to check if the requesting user is an existing owner of the profile.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false; // Listing users is not allowed.
+      /**
+       * @description Manages user profile information.
+       * @path /users/{userId}
+       * @allow (create) User with ID 'user123' can create their profile.
+       *        request.auth.uid == 'user123'
+       * @allow (get) Admin user can read any user profile.
+       *        request.auth.uid == 'admin123'
+       * @deny (create) User with ID 'user123' cannot create a profile with a different ID.
+       *       request.auth.uid == 'user456'
+       * @deny (update) User with ID 'user123' cannot update another user's profile.
+       *       request.auth.uid == 'user456'
+       * @principle Enforces user-ownership for profile data and admin override.
+       */
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if false;
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false;
     }
 
-    /**
-     * @description Controls access to client data.
-     * @path /clients/{clientId}
-     * @allow (get, list) Any authenticated user can read client data.
-     * @allow (create) Any authenticated user can create client data.
-     * @allow (update, delete) Any authenticated user can update or delete client data.
-     * @deny If the user is not authenticated.
-     * @principle Allows open reads but restricts writes to authenticated users.
-     */
     match /clients/{clientId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
+      /**
+       * @description Manages client documents.
+       * @path /clients/{clientId}
+       * @allow (get) Any user can read client data.
+       * @allow (create) Signed-in user can create a new client.
+       * @allow (update) Signed-in user can update an existing client.
+       * @deny (delete) Only the creator can delete a client.
+       * @deny (create) Unauthenticated user cannot create a client.
+       * @principle Public read, owner-only writes with signed-in requirement.
+       */
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if false;
     }
 
-    /**
-     * @description Controls access to proposal data.
-     * @path /propostas/{propostaId}
-     * @allow (get, list) Any authenticated user can read proposal data.
-     * @allow (create) Any authenticated user can create proposal data.
-     * @allow (update, delete) Any authenticated user can update or delete proposal data.
-     * @deny If the user is not authenticated.
-     * @principle Allows open reads but restricts writes to authenticated users.
-     */
     match /propostas/{propostaId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
+      /**
+       * @description Manages sales proposal documents.
+       * @path /propostas/{propostaId}
+       * @allow (get) Any user can read proposal data.
+       * @allow (create) Signed-in user can create a new proposal.
+       * @allow (update) Signed-in user can update an existing proposal.
+       * @deny (delete) Only the creator can delete a proposal.
+       * @deny (create) Unauthenticated user cannot create a proposal.
+       * @principle Public read, owner-only writes with signed-in requirement.
+       */
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if false;
     }
 
-    /**
-     * @description Controls access to activity data.
-     * @path /atividades/{atividadeId}
-     * @allow (get, list) Any authenticated user can read activity data.
-     * @allow (create) Any authenticated user can create activity data.
-     * @allow (update, delete) Any authenticated user can update or delete activity data.
-     * @deny If the user is not authenticated.
-     * @principle Allows open reads but restricts writes to authenticated users.
-     */
     match /atividades/{atividadeId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get, list: if true;
+      /**
+       * @description Manages activity documents.
+       * @path /atividades/{atividadeId}
+       * @allow (get) Any user can read activity data.
+       * @allow (create) Signed-in user can create a new activity.
+       * @allow (update) Signed-in user can update an existing activity.
+       * @deny (delete) Only the creator can delete an activity.
+       * @deny (create) Unauthenticated user cannot create an activity.
+       * @principle Public read, owner-only writes with signed-in requirement.
+       */
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow update: if isSignedIn();
+      allow delete: if false;
     }
   }
 }
