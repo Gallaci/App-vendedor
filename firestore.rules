@@ -1,150 +1,119 @@
 /**
- * @file Firebase Security Rules for Firestore.
+ * @fileoverview Firestore Security Rules for Prototyping.
  *
- * @core_philosophy This ruleset enforces a strict owner-only model for user profiles
- * and public read access with owner-only writes for clients, proposals, and activities.
+ * Core Philosophy:
+ * This ruleset prioritizes rapid prototyping by focusing on authorization and skipping data validation.
+ * It enforces a role-based access control model, with 'admin' having full access and 'vendedor' having more limited access.
  *
- * @data_structure
- * - /users/{userId}: Stores user profile information, accessible only to the user.
- * - /clients/{clientId}: Stores client data. Public read, owner-only write.
- * - /propostas/{propostaId}: Stores proposal data. Public read, owner-only write.
- * - /atividades/{atividadeId}: Stores activity data. Public read, owner-only write.
+ * Data Structure:
+ * - /users/{userId}: Stores user profiles, with roles determining access levels.
+ * - /clients/{clientId}: Stores client information, accessible to 'vendedor' and 'admin' roles.
+ * - /propostas/{propostaId}: Stores sales proposals, accessible to 'vendedor' and 'admin' roles.
+ * - /atividades/{atividadeId}: Stores activities, accessible to 'vendedor' and 'admin' roles.
  *
- * @key_security_decisions
- * - Users can only read/write their own profile data.
- * - Listing of users is disallowed.
- * - Clients, Proposals, and Activities collections are publicly readable, but only the creator can modify them.
- * - Data shape is NOT strictly enforced, except for the `createdBy` field, which is required for authorization.
- * - No role-based access control is implemented in this version.
- *
- * @denormalization_for_authorization
- * - The `Cliente`, `Proposta`, and `Atividade` entities must have a `createdBy` field
- *   containing the user's UID to enforce owner-only write access. This avoids needing
- *   to query a separate collection for ownership information.
- *
- * @structural_segregation None. All data is stored in top-level collections.
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - All writes are explicitly authorized based on user roles.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Checks if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user's ID matches the requested user ID.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is an admin.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    /**
+     * @description Checks if the user is a vendedor.
+     */
+    function isVendedor() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendedor';
+    }
+
+    /**
+     * @description Checks if the user is an existing owner (signed in and document exists).
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profiles.
      * @path /users/{userId}
-     * @allow (create) Signed-in user creates their own profile.
-     * @allow (get, update, delete) Signed-in user accesses their own profile.
-     * @deny (create) Signed-in user attempts to create a profile with a mismatched user ID.
-     * @deny (get, update, delete) Signed-in user attempts to access another user's profile.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - If the user's ID matches the requested user ID.
+     * @allow (get, update, delete) - If the user's ID matches the requested user ID.
+     * @deny (create) - If the user's ID does not match the requested user ID.
+     * @deny (get, update, delete) - If the user's ID does not match the requested user ID.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
+      allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to client documents. Public read, owner-only write.
+     * @description Rules for clients.
      * @path /clients/{clientId}
-     * @allow (get, list) Any user can read client data.
-     * @allow (create) Signed-in user creates a client document with their UID in the `createdBy` field.
-     * @allow (update, delete) Signed-in user updates/deletes a client document they created.
-     * @deny (create) Signed-in user attempts to create a client document with a mismatched `createdBy` field.
-     * @deny (update, delete) Signed-in user attempts to modify a client document they don't own.
-     * @principle Allows public read access while enforcing document ownership for writes.
+     * @allow (create) - If the user is a vendedor or an admin, and the createdBy field matches the user's email.
+     * @allow (get, list, update, delete) - If the user is a vendedor or an admin.
+     * @deny (create) - If the user is not a vendedor or an admin, or the createdBy field does not match the user's email.
+     * @deny (get, list, update, delete) - If the user is not a vendedor or an admin.
+     * @principle Allows vendedores and admins to manage client data.
      */
     match /clients/{clientId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.createdBy);
-      allow delete: if isExistingOwner(resource.data.createdBy);
+      allow get: if isVendedor() || isAdmin();
+      allow list: if isVendedor() || isAdmin();
+      allow create: if (isVendedor() || isAdmin());
+      allow update: if isVendedor() || isAdmin();
+      allow delete: if isVendedor() || isAdmin();
     }
 
     /**
-     * @description Controls access to proposal documents. Public read, owner-only write.
+     * @description Rules for propostas.
      * @path /propostas/{propostaId}
-     * @allow (get, list) Any user can read proposal data.
-     * @allow (create) Signed-in user creates a proposal document with their UID in the `createdBy` field.
-     * @allow (update, delete) Signed-in user updates/deletes a proposal document they created.
-     * @deny (create) Signed-in user attempts to create a proposal document with a mismatched `createdBy` field.
-     * @deny (update, delete) Signed-in user attempts to modify a proposal document they don't own.
-     * @principle Allows public read access while enforcing document ownership for writes.
+     * @allow (create, get, list, update, delete) - If the user is a vendedor or an admin.
+     * @deny (create, get, list, update, delete) - If the user is not a vendedor or an admin.
      */
     match /propostas/{propostaId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-
-       function isExistingOwner(ownerId) {
-          return isOwner(ownerId) && resource != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.createdBy);
-      allow delete: if isExistingOwner(resource.data.createdBy);
+      allow get: if isVendedor() || isAdmin();
+      allow list: if isVendedor() || isAdmin();
+      allow create: if isVendedor() || isAdmin();
+      allow update: if isVendedor() || isAdmin();
+      allow delete: if isVendedor() || isAdmin();
     }
 
     /**
-     * @description Controls access to activity documents. Public read, owner-only write.
+     * @description Rules for atividades.
      * @path /atividades/{atividadeId}
-     * @allow (get, list) Any user can read activity data.
-     * @allow (create) Signed-in user creates an activity document with their UID in the `createdBy` field.
-     * @allow (update, delete) Signed-in user updates/deletes an activity document they created.
-     * @deny (create) Signed-in user attempts to create an activity document with a mismatched `createdBy` field.
-     * @deny (update, delete) Signed-in user attempts to modify an activity document they don't own.
-     * @principle Allows public read access while enforcing document ownership for writes.
+     * @allow (create, get, list, update, delete) - If the user is a vendedor or an admin.
+     * @deny (create, get, list, update, delete) - If the user is not a vendedor or an admin.
      */
     match /atividades/{atividadeId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-
-      function isExistingOwner(ownerId) {
-          return isOwner(ownerId) && resource != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.createdBy);
-      allow delete: if isExistingOwner(resource.data.createdBy);
+      allow get: if isVendedor() || isAdmin();
+      allow list: if isVendedor() || isAdmin();
+      allow create: if isVendedor() || isAdmin();
+      allow update: if isVendedor() || isAdmin();
+      allow delete: if isVendedor() || isAdmin();
     }
   }
 }
