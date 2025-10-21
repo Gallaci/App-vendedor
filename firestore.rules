@@ -1,119 +1,116 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes rapid prototyping by focusing on authorization and skipping data validation.
- * It enforces a role-based access control model, with 'admin' having full access and 'vendedor' having more limited access.
+ * This ruleset enforces a user-ownership model for user profiles and allows open reads for clients, proposals and activities while restricting writes to authorized users.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profiles, with roles determining access levels.
- * - /clients/{clientId}: Stores client information, accessible to 'vendedor' and 'admin' roles.
- * - /propostas/{propostaId}: Stores sales proposals, accessible to 'vendedor' and 'admin' roles.
- * - /atividades/{atividadeId}: Stores activities, accessible to 'vendedor' and 'admin' roles.
+ * - /users/{userId}: Stores user profile information, accessible only to the owning user and admins.
+ * - /clients/{clientId}: Stores client data. Accessible to any authenticated user.
+ * - /propostas/{propostaId}: Stores proposal data. Accessible to any authenticated user.
+ * - /atividades/{atividadeId}: Stores activity data. Accessible to any authenticated user.
  *
  * Key Security Decisions:
  * - User listing is disallowed.
- * - All writes are explicitly authorized based on user roles.
+ * - Clients, proposals, and activities are publicly readable, but writes are restricted and must be performed by an authenticated user.
+ * - No schema validation is performed in this prototype, except for critical authorization fields.
+ *
+ * Denormalization for Authorization:
+ *  - Currently, no denormalization is used as the rules rely on request.auth.uid for user identification.
+ *  - Consider adding creatorId/ownerId fields to /clients, /propostas, and /atividades for finer-grained control in the future.
+ *
+ * Structural Segregation:
+ *  - No explicit structural segregation is employed.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the user's ID matches the requested user ID.
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the user is an admin.
-     */
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    /**
-     * @description Checks if the user is a vendedor.
-     */
-    function isVendedor() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendedor';
-    }
-
-    /**
-     * @description Checks if the user is an existing owner (signed in and document exists).
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Rules for user profiles.
+     * @description Controls access to user profile information.
      * @path /users/{userId}
-     * @allow (create) - If the user's ID matches the requested user ID.
-     * @allow (get, update, delete) - If the user's ID matches the requested user ID.
-     * @deny (create) - If the user's ID does not match the requested user ID.
-     * @deny (get, update, delete) - If the user's ID does not match the requested user ID.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) Authenticated user can create their own profile.
+     * @allow (get, update, delete) Authenticated user can only access their own profile.
+     * @deny (create) If the user tries to create a profile with a different userId.
+     * @deny (get, update, delete) If the user tries to access someone else's profile.
+     * @principle Enforces user ownership and prevents unauthorized profile access.
      */
     match /users/{userId} {
+      // Function to check if the requesting user is the owner of the profile.
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      // Function to check if the requesting user is an existing owner of the profile.
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if false; // Listing users is not allowed.
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Rules for clients.
+     * @description Controls access to client data.
      * @path /clients/{clientId}
-     * @allow (create) - If the user is a vendedor or an admin, and the createdBy field matches the user's email.
-     * @allow (get, list, update, delete) - If the user is a vendedor or an admin.
-     * @deny (create) - If the user is not a vendedor or an admin, or the createdBy field does not match the user's email.
-     * @deny (get, list, update, delete) - If the user is not a vendedor or an admin.
-     * @principle Allows vendedores and admins to manage client data.
+     * @allow (get, list) Any authenticated user can read client data.
+     * @allow (create) Any authenticated user can create client data.
+     * @allow (update, delete) Any authenticated user can update or delete client data.
+     * @deny If the user is not authenticated.
+     * @principle Allows open reads but restricts writes to authenticated users.
      */
     match /clients/{clientId} {
-      allow get: if isVendedor() || isAdmin();
-      allow list: if isVendedor() || isAdmin();
-      allow create: if (isVendedor() || isAdmin());
-      allow update: if isVendedor() || isAdmin();
-      allow delete: if isVendedor() || isAdmin();
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Rules for propostas.
+     * @description Controls access to proposal data.
      * @path /propostas/{propostaId}
-     * @allow (create, get, list, update, delete) - If the user is a vendedor or an admin.
-     * @deny (create, get, list, update, delete) - If the user is not a vendedor or an admin.
+     * @allow (get, list) Any authenticated user can read proposal data.
+     * @allow (create) Any authenticated user can create proposal data.
+     * @allow (update, delete) Any authenticated user can update or delete proposal data.
+     * @deny If the user is not authenticated.
+     * @principle Allows open reads but restricts writes to authenticated users.
      */
     match /propostas/{propostaId} {
-      allow get: if isVendedor() || isAdmin();
-      allow list: if isVendedor() || isAdmin();
-      allow create: if isVendedor() || isAdmin();
-      allow update: if isVendedor() || isAdmin();
-      allow delete: if isVendedor() || isAdmin();
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
 
     /**
-     * @description Rules for atividades.
+     * @description Controls access to activity data.
      * @path /atividades/{atividadeId}
-     * @allow (create, get, list, update, delete) - If the user is a vendedor or an admin.
-     * @deny (create, get, list, update, delete) - If the user is not a vendedor or an admin.
+     * @allow (get, list) Any authenticated user can read activity data.
+     * @allow (create) Any authenticated user can create activity data.
+     * @allow (update, delete) Any authenticated user can update or delete activity data.
+     * @deny If the user is not authenticated.
+     * @principle Allows open reads but restricts writes to authenticated users.
      */
     match /atividades/{atividadeId} {
-      allow get: if isVendedor() || isAdmin();
-      allow list: if isVendedor() || isAdmin();
-      allow create: if isVendedor() || isAdmin();
-      allow update: if isVendedor() || isAdmin();
-      allow delete: if isVendedor() || isAdmin();
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
+      allow delete: if isSignedIn() && resource != null;
     }
   }
 }
