@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,9 +31,9 @@ import { ptBR } from "date-fns/locale"
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
-import { useMemo } from "react";
 import type { Proposta } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
+import { AddPropostaDialog } from "@/components/propostas/add-proposta-dialog";
 
 const statusVariant = {
   'Aprovada': 'default',
@@ -44,6 +45,7 @@ const statusVariant = {
 export default function PropostasPage() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const propostasQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -57,10 +59,12 @@ export default function PropostasPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
         <h1 className="font-semibold text-lg md:text-2xl">Propostas</h1>
-        <Button className="ml-auto" size="sm">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Criar Proposta
-        </Button>
+        <AddPropostaDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Button className="ml-auto" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Criar Proposta
+          </Button>
+        </AddPropostaDialog>
       </div>
       <Card>
         <CardHeader>
