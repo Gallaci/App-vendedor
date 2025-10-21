@@ -33,12 +33,24 @@ export type UserProfile = {
 };
 
 export type AtividadeStatus = 'Pendente' | 'Concluída';
+export type AtividadeTipo = 'ligacao' | 'lead-inbound' | 'reuniao' | 'avaliacao';
+
+export type DetalhesLigacao = {
+  contato: string;
+  telefone?: string;
+  email?: string;
+  atendida: boolean;
+  reuniaoAgendada: boolean;
+  apresentacaoEnviada: boolean;
+  anotacoes?: string;
+};
 
 export type Atividade = {
     id: string;
     titulo: string;
-    descricao?: string;
+    tipo: AtividadeTipo;
     data: Timestamp;
     status: AtividadeStatus;
     createdBy: string;
+    detalhes: DetalhesLigacao | any; // 'any' para acomodar outros tipos de detalhes no futuro
 };

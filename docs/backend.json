@@ -99,12 +99,16 @@
       "properties": {
         "id": { "type": "string" },
         "titulo": { "type": "string" },
-        "descricao": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["ligacao", "lead-inbound", "reuniao", "avaliacao"] },
         "data": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Pendente", "Concluída"] },
-        "createdBy": { "type": "string" }
+        "createdBy": { "type": "string" },
+        "detalhes": {
+          "type": "object",
+          "description": "Specific details of the activity, depending on its type."
+        }
       },
-      "required": ["titulo", "data", "status", "createdBy"]
+      "required": ["titulo", "tipo", "data", "status", "createdBy"]
     }
   },
   "auth": {
