@@ -15,7 +15,7 @@ export type ItemLicenca = {
   quantidade: number;
   valorCliente: number;
   margemRecorrente: number;
-  margemAvulso: number;
+  margemAvulso?: number;
 };
 
 export type ItemContrato = {
@@ -83,3 +83,5 @@ export type Atividade = {
     createdBy: string;
     detalhes: DetalhesLigacao | any; // 'any' para acomodar outros tipos de detalhes no futuro
 };
+
+    

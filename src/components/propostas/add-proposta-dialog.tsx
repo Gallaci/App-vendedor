@@ -47,7 +47,7 @@ const itemSchema = z.discriminatedUnion("tipo", [
         quantidade: z.coerce.number().min(1, 'A quantidade deve ser pelo menos 1.'),
         valorCliente: z.coerce.number().positive('O valor para o cliente deve ser positivo.'),
         margemRecorrente: z.coerce.number().min(0, 'A margem não pode ser negativa.'),
-        margemAvulso: z.coerce.number().min(0, 'A margem não pode ser negativa.'),
+        margemAvulso: z.coerce.number().min(0, 'A margem não pode ser negativa.').optional(),
     }),
     z.object({
         tipo: z.literal('Contrato'),

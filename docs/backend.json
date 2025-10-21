@@ -52,7 +52,7 @@
             "margemRecorrente": { "type": "number" },
             "margemAvulso": { "type": "number" }
         },
-        "required": ["tipo", "nome", "quantidade", "valorCliente", "margemRecorrente", "margemAvulso"]
+        "required": ["tipo", "nome", "quantidade", "valorCliente", "margemRecorrente"]
     },
     "ItemContrato": {
         "title": "Item de Contrato",
@@ -129,3 +129,5 @@
     }
   }
 }
+
+    
