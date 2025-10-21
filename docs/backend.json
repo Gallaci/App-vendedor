@@ -77,21 +77,6 @@
       },
       "required": ["name", "email"]
     },
-    "Produto": {
-      "title": "Produto",
-      "description": "Represents a product in the system.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "nome": { "type": "string" },
-        "descricao": { "type": "string" },
-        "preco": { "type": "number" },
-        "estoque": { "type": "number" },
-        "imageUrl": { "type": "string", "format": "uri" },
-        "imageHint": { "type": "string" }
-      },
-      "required": ["nome", "preco", "estoque"]
-    },
     "Venda": {
       "title": "Venda",
       "description": "Represents a sale in the system.",
@@ -123,12 +108,6 @@
         "$ref": "#/entities/Cliente"
       },
       "description": "Stores individual client documents."
-    },
-    "/produtos/{produtoId}": {
-      "schema": {
-        "$ref": "#/entities/Produto"
-      },
-      "description": "Stores individual product documents."
     },
     "/vendas/{vendaId}": {
       "schema": {

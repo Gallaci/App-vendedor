@@ -12,7 +12,7 @@ export type Venda = {
 
 export type Cliente = {
   id: string;
-  name: string; // Changed from 'nome'
+  name: string;
   email: string;
   telefone?: string;
   avatarUrl?: string;
@@ -20,16 +20,6 @@ export type Cliente = {
   totalGasto?: number;
   createdAt?: Timestamp;
   createdBy?: string;
-};
-
-export type Produto = {
-  id: string;
-  nome: string;
-  descricao: string;
-  preco: number;
-  estoque: number;
-  imageUrl: string;
-  imageHint: string;
 };
 
 export type UserProfile = {

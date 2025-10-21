@@ -8,7 +8,6 @@ import { useActivePath } from "@/hooks/use-active-path"
 
 const navItems = [
   { href: "/painel", icon: LayoutDashboard, label: "Painel" },
-  { href: "/produtos", icon: Package, label: "Produtos" },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/vendas", icon: ShoppingCart, label: "Vendas" },
   { href: "/pagamentos", icon: CreditCard, label: "Pagamentos" },
