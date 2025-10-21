@@ -5,29 +5,11 @@
       "description": "Represents a user's profile information.",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "description": "The user's unique ID."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The user's email address."
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's display name."
-        },
-        "photoURL": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL for the user's profile picture."
-        },
-        "role": {
-          "type": "string",
-          "description": "The user's role in the system.",
-          "enum": ["vendedor", "admin"]
-        }
+        "uid": { "type": "string", "description": "The user's unique ID." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "URL for the user's profile picture." },
+        "role": { "type": "string", "description": "The user's role in the system.", "enum": ["vendedor", "admin"] }
       },
       "required": ["uid", "email", "role"]
     },
@@ -36,46 +18,52 @@
       "description": "Represents a customer in the system.",
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the client."
-        },
-        "name": {
-          "type": "string",
-          "description": "The client's name."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The client's email address."
-        },
-        "telefone": {
-          "type": "string",
-          "description": "The client's phone number."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL for the client's avatar image."
-        },
-        "cidade": {
-          "type": "string",
-          "description": "The city where the client lives."
-        },
-        "totalGasto": {
-          "type": "number",
-          "description": "The total amount spent by the client."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "createdBy": {
-          "type": "string",
-          "format": "email"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the client." },
+        "name": { "type": "string", "description": "The client's name." },
+        "email": { "type": "string", "format": "email", "description": "The client's email address." },
+        "telefone": { "type": "string", "description": "The client's phone number." },
+        "avatarUrl": { "type": "string", "format": "uri", "description": "URL for the client's avatar image." },
+        "cidade": { "type": "string", "description": "The city where the client lives." },
+        "totalGasto": { "type": "number", "description": "The total amount spent by the client." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string", "format": "email" }
       },
       "required": ["name", "email"]
+    },
+    "ItemProjeto": {
+        "title": "Item de Projeto",
+        "type": "object",
+        "properties": {
+            "tipo": { "type": "string", "enum": ["Projeto"] },
+            "nome": { "type": "string", "enum": ["Projeto 1", "Projeto 2", "Projeto 3"] },
+            "quantidade": { "type": "number" },
+            "valor": { "type": "number" }
+        },
+        "required": ["tipo", "nome", "quantidade", "valor"]
+    },
+    "ItemLicenca": {
+        "title": "Item de Licença",
+        "type": "object",
+        "properties": {
+            "tipo": { "type": "string", "enum": ["Licenca"] },
+            "nome": { "type": "string", "enum": ["Licença 1", "Licença 2", "Licença 3"] },
+            "quantidade": { "type": "number" },
+            "valorCliente": { "type": "number" },
+            "margemRecorrente": { "type": "number" },
+            "margemAvulso": { "type": "number" }
+        },
+        "required": ["tipo", "nome", "quantidade", "valorCliente", "margemRecorrente", "margemAvulso"]
+    },
+    "ItemContrato": {
+        "title": "Item de Contrato",
+        "type": "object",
+        "properties": {
+            "tipo": { "type": "string", "enum": ["Contrato"] },
+            "nome": { "type": "string", "enum": ["Contrato 1", "Contrato 2", "Contrato 3"] },
+            "quantidade": { "type": "number" },
+            "valor": { "type": "number" }
+        },
+        "required": ["tipo", "nome", "quantidade", "valor"]
     },
     "Proposta": {
       "title": "Proposta",
@@ -86,17 +74,19 @@
         "cliente": { "type": "string" },
         "data": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["Pendente", "Aprovada", "Rejeitada", "Convertida em Venda"] },
-        "tipo": { "type": "string", "enum": ["Projeto", "Licenca"] },
-        "nomeProjeto": { "type": "string", "enum": ["Projeto 1", "Projeto 2", "Projeto 3"] },
-        "valorProjeto": { "type": "number" },
-        "nomeLicenca": { "type": "string", "enum": ["Licença 1", "Licença 2", "Licença 3"] },
-        "valorCliente": { "type": "number" },
-        "margemRecorrente": { "type": "number" },
-        "margemAvulso": { "type": "number" },
-        "quantidade": { "type": "number" },
+        "itens": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    { "$ref": "#/entities/ItemProjeto" },
+                    { "$ref": "#/entities/ItemLicenca" },
+                    { "$ref": "#/entities/ItemContrato" }
+                ]
+            }
+        },
         "total": { "type": "number" }
       },
-      "required": ["cliente", "data", "status", "tipo", "total"]
+      "required": ["cliente", "data", "status", "itens", "total"]
     },
     "Atividade": {
       "title": "Atividade",
@@ -122,27 +112,19 @@
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/UserProfile"
-      },
+      "schema": { "$ref": "#/entities/UserProfile" },
       "description": "Stores user profile information."
     },
     "/clients/{clientId}": {
-      "schema": {
-        "$ref": "#/entities/Cliente"
-      },
+      "schema": { "$ref": "#/entities/Cliente" },
       "description": "Stores individual client documents."
     },
     "/propostas/{propostaId}": {
-      "schema": {
-        "$ref": "#/entities/Proposta"
-      },
+      "schema": { "$ref": "#/entities/Proposta" },
       "description": "Stores individual proposal documents."
     },
     "/atividades/{atividadeId}": {
-      "schema": {
-        "$ref": "#/entities/Atividade"
-      },
+      "schema": { "$ref": "#/entities/Atividade" },
       "description": "Stores individual activity documents."
     }
   }

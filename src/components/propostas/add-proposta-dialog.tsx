@@ -23,53 +23,83 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirestore, useUser, useCollection } from '@/firebase';
 import { serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { addProposta } from '@/firebase/firestore/propostas';
-import type { Cliente } from '@/lib/types';
+import type { Cliente, ItemProposta, Proposta } from '@/lib/types';
 import { collection } from "firebase/firestore";
+
+const itemBaseSchema = z.object({
+  quantidade: z.coerce.number().min(1, 'A quantidade deve ser pelo menos 1.'),
+});
+
+const projetoSchema = itemBaseSchema.extend({
+  tipo: z.literal('Projeto'),
+  nome: z.enum(['Projeto 1', 'Projeto 2', 'Projeto 3'], { required_error: 'Selecione um projeto.' }),
+  valor: z.coerce.number().positive('O valor deve ser positivo.'),
+});
+
+const licencaSchema = itemBaseSchema.extend({
+  tipo: z.literal('Licenca'),
+  nome: z.enum(['Licença 1', 'Licença 2', 'Licença 3'], { required_error: 'Selecione uma licença.' }),
+  valorCliente: z.coerce.number().positive('O valor para o cliente deve ser positivo.'),
+  margemRecorrente: z.coerce.number().min(0, 'A margem não pode ser negativa.'),
+  margemAvulso: z.coerce.number().min(0, 'A margem não pode ser negativa.'),
+});
+
+const contratoSchema = itemBaseSchema.extend({
+    tipo: z.literal('Contrato'),
+    nome: z.enum(['Contrato 1', 'Contrato 2', 'Contrato 3'], { required_error: 'Selecione um contrato.' }),
+    valor: z.coerce.number().positive('O valor deve ser positivo.'),
+});
 
 const formSchema = z.object({
   cliente: z.string().min(1, { message: 'Selecione um cliente.' }),
-  tipo: z.enum(['Projeto', 'Licenca'], { required_error: 'Selecione o tipo de proposta.' }),
-
-  // Campos de Projeto
-  nomeProjeto: z.enum(['Projeto 1', 'Projeto 2', 'Projeto 3']).optional(),
-  valorProjeto: z.coerce.number().optional(),
-
-  // Campos de Licença
-  nomeLicenca: z.enum(['Licença 1', 'Licença 2', 'Licença 3']).optional(),
+  itemTipo: z.enum(['Projeto', 'Licenca', 'Contrato'], { required_error: 'Selecione o tipo de item.' }),
+  
+  // Campos do item - serão validados dinamicamente
+  nome: z.string().optional(),
+  quantidade: z.coerce.number().min(1).optional(),
+  valor: z.coerce.number().optional(),
   valorCliente: z.coerce.number().optional(),
   margemRecorrente: z.coerce.number().optional(),
   margemAvulso: z.coerce.number().optional(),
-  
-  quantidade: z.coerce.number().min(1, { message: 'A quantidade deve ser pelo menos 1.' }),
+
 }).superRefine((data, ctx) => {
-    if (data.tipo === 'Projeto') {
-        if (!data.nomeProjeto) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Selecione um projeto.', path: ['nomeProjeto'] });
-        }
-        if (data.valorProjeto === undefined || data.valorProjeto <= 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor deve ser positivo.', path: ['valorProjeto'] });
-        }
-    }
-    if (data.tipo === 'Licenca') {
-        if (!data.nomeLicenca) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Selecione uma licença.', path: ['nomeLicenca'] });
-        }
-        if (data.valorCliente === undefined || data.valorCliente <= 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor deve ser positivo.', path: ['valorCliente'] });
-        }
-        if (data.margemRecorrente === undefined || data.margemRecorrente < 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A margem não pode ser negativa.', path: ['margemRecorrente'] });
-        }
-         if (data.margemAvulso === undefined || data.margemAvulso < 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A margem não pode ser negativa.', path: ['margemAvulso'] });
-        }
+    switch (data.itemTipo) {
+        case 'Projeto':
+            if (!data.nome || !['Projeto 1', 'Projeto 2', 'Projeto 3'].includes(data.nome)) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Selecione um projeto válido.', path: ['nome'] });
+            }
+            if (!data.valor || data.valor <= 0) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor deve ser positivo.', path: ['valor'] });
+            }
+            break;
+        case 'Licenca':
+            if (!data.nome || !['Licença 1', 'Licença 2', 'Licença 3'].includes(data.nome)) {
+                 ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Selecione uma licença válida.', path: ['nome'] });
+            }
+            if (!data.valorCliente || data.valorCliente <= 0) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor para o cliente deve ser positivo.', path: ['valorCliente'] });
+            }
+            if (data.margemRecorrente === undefined || data.margemRecorrente < 0) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A margem não pode ser negativa.', path: ['margemRecorrente'] });
+            }
+            if (data.margemAvulso === undefined || data.margemAvulso < 0) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A margem não pode ser negativa.', path: ['margemAvulso'] });
+            }
+            break;
+        case 'Contrato':
+             if (!data.nome || !['Contrato 1', 'Contrato 2', 'Contrato 3'].includes(data.nome)) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Selecione um contrato válido.', path: ['nome'] });
+            }
+            if (!data.valor || data.valor <= 0) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor deve ser positivo.', path: ['valor'] });
+            }
+            break;
     }
 });
 
@@ -102,7 +132,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     },
   });
 
-  const tipoProposta = useWatch({ control: form.control, name: 'tipo' });
+  const itemTipo = useWatch({ control: form.control, name: 'itemTipo' });
 
   const onSubmit = async (values: AddPropostaFormValues) => {
     if (!user) {
@@ -112,38 +142,53 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
 
     setLoading(true);
     try {
-        let newPropostaData: any;
+        let item: ItemProposta;
         let total = 0;
+        const quantidade = values.quantidade || 1;
 
-        if (values.tipo === 'Projeto') {
-            total = (values.valorProjeto || 0) * values.quantidade;
-            newPropostaData = {
-                cliente: values.cliente,
-                tipo: 'Projeto',
-                nomeProjeto: values.nomeProjeto,
-                quantidade: values.quantidade,
-                valorProjeto: values.valorProjeto,
-                total,
-            };
-        } else { // Licenca
-            total = (values.valorCliente || 0) * values.quantidade;
-            newPropostaData = {
-                cliente: values.cliente,
-                tipo: 'Licenca',
-                nomeLicenca: values.nomeLicenca,
-                quantidade: values.quantidade,
-                valorCliente: values.valorCliente,
-                margemRecorrente: values.margemRecorrente,
-                margemAvulso: values.margemAvulso,
-                total,
-            };
+        switch (values.itemTipo) {
+            case 'Projeto':
+                total = (values.valor || 0) * quantidade;
+                item = {
+                    tipo: 'Projeto',
+                    nome: values.nome as any,
+                    quantidade,
+                    valor: values.valor!,
+                };
+                break;
+            case 'Licenca':
+                total = (values.valorCliente || 0) * quantidade;
+                item = {
+                    tipo: 'Licenca',
+                    nome: values.nome as any,
+                    quantidade,
+                    valorCliente: values.valorCliente!,
+                    margemRecorrente: values.margemRecorrente!,
+                    margemAvulso: values.margemAvulso!,
+                };
+                break;
+            case 'Contrato':
+                total = (values.valor || 0) * quantidade;
+                item = {
+                    tipo: 'Contrato',
+                    nome: values.nome as any,
+                    quantidade,
+                    valor: values.valor!,
+                };
+                break;
+            default:
+                throw new Error("Tipo de item inválido");
         }
 
-      await addProposta(firestore, {
-        ...newPropostaData,
-        status: 'Pendente' as const,
-        data: serverTimestamp(),
-      });
+      const newPropostaData = {
+          cliente: values.cliente,
+          itens: [item], // Armazenando como uma lista de itens
+          total: total,
+          status: 'Pendente' as const,
+          data: serverTimestamp(),
+      };
+
+      await addProposta(firestore, newPropostaData as Omit<Proposta, 'id'>);
 
       toast({ title: 'Sucesso!', description: 'Nova proposta criada.' });
       form.reset();
@@ -156,7 +201,6 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     }
   };
 
-  // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       form.reset({ cliente: '', quantidade: 1 });
@@ -175,18 +219,11 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="cliente"
-              render={({ field }) => (
+            <FormField control={form.control} name="cliente" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cliente</FormLabel>
                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um cliente" />
-                      </SelectTrigger>
-                    </FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione um cliente" /></SelectTrigger></FormControl>
                     <SelectContent>
                       {loadingClientes ? (
                         <SelectItem value="loading" disabled>Carregando...</SelectItem>
@@ -197,42 +234,25 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                   </Select>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tipo"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Tipo de Proposta</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="Projeto" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Projeto</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="Licenca" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Licença</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
+            )}/>
+            <FormField control={form.control} name="itemTipo" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Tipo de Item</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo de item" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Projeto">Projeto</SelectItem>
+                            <SelectItem value="Licenca">Licença</SelectItem>
+                            <SelectItem value="Contrato">Contrato</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
                 </FormItem>
-              )}
-            />
+            )}/>
 
-            {tipoProposta === 'Projeto' && (
+            {itemTipo === 'Projeto' && (
               <>
-                <FormField control={form.control} name="nomeProjeto" render={({ field }) => (
+                <FormField control={form.control} name="nome" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Nome do Projeto</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -254,7 +274,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                             <FormMessage />
                         </FormItem>
                     )}/>
-                    <FormField control={form.control} name="valorProjeto" render={({ field }) => (
+                    <FormField control={form.control} name="valor" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Valor do Projeto (R$)</FormLabel>
                             <FormControl><Input type="number" placeholder="1500.00" step="0.01" {...field} /></FormControl>
@@ -265,9 +285,9 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
               </>
             )}
 
-            {tipoProposta === 'Licenca' && (
+            {itemTipo === 'Licenca' && (
                 <>
-                    <FormField control={form.control} name="nomeLicenca" render={({ field }) => (
+                    <FormField control={form.control} name="nome" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Nome da Licença</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -315,9 +335,44 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                     </div>
                 </>
             )}
+
+             {itemTipo === 'Contrato' && (
+              <>
+                <FormField control={form.control} name="nome" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Nome do Contrato</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Selecione o contrato" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="Contrato 1">Contrato 1</SelectItem>
+                                <SelectItem value="Contrato 2">Contrato 2</SelectItem>
+                                <SelectItem value="Contrato 3">Contrato 3</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}/>
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="quantidade" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Quantidade</FormLabel>
+                            <FormControl><Input type="number" placeholder="1" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <FormField control={form.control} name="valor" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valor do Contrato (R$)</FormLabel>
+                            <FormControl><Input type="number" placeholder="500.00" step="0.01" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                </div>
+              </>
+            )}
             
             <DialogFooter>
-              <Button type="submit" disabled={loading || loadingClientes}>
+              <Button type="submit" disabled={loading || loadingClientes || !itemTipo}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Proposta
               </Button>

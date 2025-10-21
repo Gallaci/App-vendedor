@@ -1,34 +1,44 @@
 'use client';
 import { Timestamp } from 'firebase/firestore';
 
-export type PropostaStatus = 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
-
-export type PropostaBase = {
-  id: string;
-  cliente: string;
-  data: Timestamp;
-  status: PropostaStatus;
-};
-
-export type PropostaProjeto = PropostaBase & {
+// Tipos de Itens da Proposta
+export type ItemProjeto = {
   tipo: 'Projeto';
-  nomeProjeto: 'Projeto 1' | 'Projeto 2' | 'Projeto 3';
+  nome: 'Projeto 1' | 'Projeto 2' | 'Projeto 3';
   quantidade: number;
-  valorProjeto: number;
-  total: number;
+  valor: number;
 };
 
-export type PropostaLicenca = PropostaBase & {
+export type ItemLicenca = {
   tipo: 'Licenca';
-  nomeLicenca: 'Licença 1' | 'Licença 2' | 'Licença 3';
+  nome: 'Licença 1' | 'Licença 2' | 'Licença 3';
   quantidade: number;
   valorCliente: number;
   margemRecorrente: number;
   margemAvulso: number;
-  total: number;
 };
 
-export type Proposta = PropostaProjeto | PropostaLicenca;
+export type ItemContrato = {
+    tipo: 'Contrato';
+    nome: 'Contrato 1' | 'Contrato 2' | 'Contrato 3';
+    quantidade: number;
+    valor: number;
+};
+
+export type ItemProposta = ItemProjeto | ItemLicenca | ItemContrato;
+
+
+// Tipo Proposta Principal
+export type PropostaStatus = 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
+
+export type Proposta = {
+  id: string;
+  cliente: string;
+  data: Timestamp;
+  status: PropostaStatus;
+  itens: ItemProposta[];
+  total: number;
+};
 
 
 export type Cliente = {
