@@ -1,5 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
+export type PropostaStatus = 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
+
 export type Proposta = {
   id: string;
   cliente: string;
@@ -7,7 +9,7 @@ export type Proposta = {
   quantidade: number;
   total: number;
   data: Timestamp;
-  status: 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
+  status: PropostaStatus;
 };
 
 export type Cliente = {

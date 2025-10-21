@@ -34,18 +34,21 @@ import { collection } from "firebase/firestore";
 import type { Proposta } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { AddPropostaDialog } from "@/components/propostas/add-proposta-dialog";
+import { updatePropostaStatus } from "@/firebase/firestore/propostas";
+import { useToast } from "@/hooks/use-toast";
 
 const statusVariant = {
   'Aprovada': 'default',
   'Pendente': 'secondary',
   'Rejeitada': 'destructive',
-  'Convertida em Venda': 'default',
+  'Convertida em Venda': 'default', // Using default style which is green-ish
 } as const;
 
 export default function PropostasPage() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const propostasQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -54,6 +57,23 @@ export default function PropostasPage() {
 
   const { data: propostas, loading: dataLoading } = useCollection<Proposta>(propostasQuery);
   const loading = userLoading || dataLoading;
+  
+  const handleConvertVenda = async (propostaId: string) => {
+    try {
+      await updatePropostaStatus(firestore, propostaId, 'Convertida em Venda');
+      toast({
+        title: 'Sucesso!',
+        description: 'Proposta convertida em venda.',
+      });
+    } catch (error) {
+      console.error("Error converting proposal: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro!',
+        description: 'Não foi possível converter a proposta. Tente novamente.',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -104,7 +124,10 @@ export default function PropostasPage() {
                     </TableCell>
                     <TableCell className="text-right">R$ {proposta.total.toFixed(2)}</TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <Badge variant={statusVariant[proposta.status] || 'default'}>
+                       <Badge 
+                        variant={statusVariant[proposta.status] || 'default'}
+                        className={proposta.status === 'Convertida em Venda' ? 'bg-green-600 hover:bg-green-700' : ''}
+                      >
                         {proposta.status}
                       </Badge>
                     </TableCell>
@@ -123,7 +146,12 @@ export default function PropostasPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-                          <DropdownMenuItem>Converter em Venda</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleConvertVenda(proposta.id)}
+                            disabled={proposta.status === 'Convertida em Venda'}
+                          >
+                            Converter em Venda
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
