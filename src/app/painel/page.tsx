@@ -6,7 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { ArrowUp, Users, ShoppingCart, DollarSign, Loader, FileText } from 'lucide-react'
 import { useCollection } from '@/firebase/firestore/use-collection'
 import { useFirestore } from '@/firebase'
-import { collection } from 'firebase/firestore'
+import { collection, query, where } from 'firebase/firestore'
 import type { Proposta, Cliente } from '@/lib/types'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -24,13 +24,13 @@ export default function PainelPage() {
   const { user, loading: userLoading } = useUser();
 
   const propostasQuery = useMemo(() => {
-    if (!firestore || !user) return null
-    return collection(firestore, 'propostas')
+    if (!firestore || !user?.email) return null
+    return query(collection(firestore, 'propostas'), where('createdBy', '==', user.email));
   }, [firestore, user])
 
   const clientesQuery = useMemo(() => {
-    if (!firestore || !user) return null
-    return collection(firestore, 'clients');
+    if (!firestore || !user?.email) return null
+    return query(collection(firestore, 'clients'), where('createdBy', '==', user.email));
   }, [firestore, user]);
 
   const { data: propostas, loading: loadingPropostas } = useCollection<Proposta>(propostasQuery)

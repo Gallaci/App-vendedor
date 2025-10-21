@@ -41,5 +41,3 @@ export async function updatePropostaStatus(firestore: Firestore, propostaId: str
         throw serverError;
     });
 }
-
-    

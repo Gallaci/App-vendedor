@@ -38,6 +38,7 @@ export type Proposta = {
   status: PropostaStatus;
   itens: ItemProposta[];
   total: number;
+  createdBy: string;
 };
 
 
@@ -83,5 +84,3 @@ export type Atividade = {
     createdBy: string;
     detalhes: DetalhesLigacao | any; // 'any' para acomodar outros tipos de detalhes no futuro
 };
-
-    

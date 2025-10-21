@@ -64,9 +64,10 @@ export default function VendasPage() {
   
 
   const vendasQuery = useMemo(() => {
-    if (!firestore || !user || !startDate || !endDate) return null;
+    if (!firestore || !user?.email || !startDate || !endDate) return null;
     return query(
       collection(firestore, 'propostas'),
+      where('createdBy', '==', user.email),
       where('status', '==', 'Convertida em Venda'),
       where('data', '>=', Timestamp.fromDate(startDate)),
       where('data', '<=', Timestamp.fromDate(endDate))

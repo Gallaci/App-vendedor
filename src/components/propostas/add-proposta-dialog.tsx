@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -266,7 +265,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
 
 
   const onSubmit = async (values: AddPropostaFormValues) => {
-    if (!user) {
+    if (!user || !user.email) {
         toast({ variant: 'destructive', title: 'Erro!', description: 'Você precisa estar logado para criar uma proposta.'});
         return;
     }
@@ -291,6 +290,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
           total: totalProposta,
           status: 'Pendente' as const,
           data: serverTimestamp(),
+          createdBy: user.email,
       };
 
       await addProposta(firestore, newPropostaData as Omit<Proposta, 'id'>);

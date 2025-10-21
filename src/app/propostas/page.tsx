@@ -30,7 +30,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useFirestore } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import type { Proposta, ItemProposta } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { AddPropostaDialog } from "@/components/propostas/add-proposta-dialog";
@@ -51,8 +51,8 @@ export default function PropostasPage() {
   const { toast } = useToast();
 
   const propostasQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'propostas');
+    if (!firestore || !user?.email) return null;
+    return query(collection(firestore, 'propostas'), where('createdBy', '==', user.email));
   }, [firestore, user]);
 
   const { data: propostas, loading: dataLoading } = useCollection<Proposta>(propostasQuery);

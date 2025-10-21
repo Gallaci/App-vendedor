@@ -36,7 +36,7 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table"
-import { format, startOfWeek, endOfWeek, getWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, getWeek, startOfMonth, endOfMonth as dfEndOFMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Schemas
@@ -492,9 +492,8 @@ function TabFormulario() {
 
     const propostasQuery = useMemo(() => {
         if (!firestore || !user?.email) return null;
-        // As propostas não têm um campo createdBy, então pegamos todas por enquanto
-        // Idealmente, propostas também deveriam ter 'createdBy'
-        return collection(firestore, 'propostas');
+        // Query to get proposals created by the current user
+        return query(collection(firestore, 'propostas'), where("createdBy", "==", user.email));
     }, [firestore, user]);
 
     const { data: allActivities, loading: activitiesLoading } = useCollection<Atividade>(atividadesQuery);
@@ -518,7 +517,7 @@ function TabFormulario() {
         const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 }); // Monday
         const endOfThisWeek = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
         const startOfThisMonth = startOfMonth(now);
-        const endOfMonth = endOfMonth(now);
+        const endOfThisMonth = dfEndOFMonth(now);
 
         // Filter data for the current week/month
         const weeklyActivities = allActivities.filter(a => a.data && a.data.toDate() >= startOfThisWeek && a.data.toDate() <= endOfThisWeek);
