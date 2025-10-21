@@ -75,12 +75,6 @@ export default function PropostasPage() {
     }
   };
 
-  const getProdutoServico = (item: ItemProposta) => {
-    if (!item) return 'N/A';
-    return `${item.tipo}: ${item.nome}`;
-  }
-
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
@@ -109,7 +103,6 @@ export default function PropostasPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center">Cliente</TableHead>
-                  <TableHead className="hidden sm:table-cell text-center">Produto/Serviço</TableHead>
                   <TableHead className="hidden md:table-cell text-center">Data</TableHead>
                   <TableHead className="text-center">Total</TableHead>
                   <TableHead className="hidden sm:table-cell text-center">Status</TableHead>
@@ -124,7 +117,6 @@ export default function PropostasPage() {
                     <TableCell className="text-center">
                       <div className="font-medium">{proposta.cliente}</div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell text-center">{getProdutoServico(proposta.itens[0])}</TableCell>
                     <TableCell className="hidden md:table-cell text-center">
                       {proposta.data ? format(proposta.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
                     </TableCell>
