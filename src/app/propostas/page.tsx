@@ -108,12 +108,12 @@ export default function PropostasPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden sm:table-cell">Produto/Serviço</TableHead>
-                  <TableHead className="hidden md:table-cell">Data</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead>
+                  <TableHead className="text-center">Cliente</TableHead>
+                  <TableHead className="hidden sm:table-cell text-center">Produto/Serviço</TableHead>
+                  <TableHead className="hidden md:table-cell text-center">Data</TableHead>
+                  <TableHead className="text-center">Total</TableHead>
+                  <TableHead className="hidden sm:table-cell text-center">Status</TableHead>
+                  <TableHead className="text-center">
                     <span className="sr-only">Ações</span>
                   </TableHead>
                 </TableRow>
@@ -121,23 +121,23 @@ export default function PropostasPage() {
               <TableBody>
                 {propostas.map((proposta) => (
                   <TableRow key={proposta.id}>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <div className="font-medium">{proposta.cliente}</div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{getProdutoServico(proposta.itens[0])}</TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden sm:table-cell text-center">{getProdutoServico(proposta.itens[0])}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">
                       {proposta.data ? format(proposta.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
                     </TableCell>
-                    <TableCell className="text-right">R$ {proposta.total.toFixed(2)}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
+                    <TableCell className="text-center">R$ {proposta.total.toFixed(2)}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-center">
                        <Badge 
                         variant={statusVariant[proposta.status] || 'default'}
-                        className={proposta.status === 'Convertida em Venda' ? 'bg-green-600 hover:bg-green-700' : ''}
+                        className={`inline-block ${proposta.status === 'Convertida em Venda' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                       >
                         {proposta.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
