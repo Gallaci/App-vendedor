@@ -77,9 +77,9 @@
       },
       "required": ["name", "email"]
     },
-    "Venda": {
-      "title": "Venda",
-      "description": "Represents a sale in the system.",
+    "Proposta": {
+      "title": "Proposta",
+      "description": "Represents a sales proposal in the system.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -88,7 +88,7 @@
         "quantidade": { "type": "number" },
         "total": { "type": "number" },
         "data": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Concluído", "Pendente", "Cancelado"] }
+        "status": { "type": "string", "enum": ["Pendente", "Aprovada", "Rejeitada", "Convertida em Venda"] }
       },
       "required": ["cliente", "produto", "total", "data", "status"]
     }
@@ -109,11 +109,11 @@
       },
       "description": "Stores individual client documents."
     },
-    "/vendas/{vendaId}": {
+    "/propostas/{propostaId}": {
       "schema": {
-        "$ref": "#/entities/Venda"
+        "$ref": "#/entities/Proposta"
       },
-      "description": "Stores individual sale documents."
+      "description": "Stores individual proposal documents."
     }
   }
 }

@@ -1,13 +1,13 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type Venda = {
+export type Proposta = {
   id: string;
   cliente: string;
   produto: string;
   quantidade: number;
   total: number;
-  data: Timestamp; 
-  status: 'Concluído' | 'Pendente' | 'Cancelado';
+  data: Timestamp;
+  status: 'Pendente' | 'Aprovada' | 'Rejeitada' | 'Convertida em Venda';
 };
 
 export type Cliente = {

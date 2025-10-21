@@ -31,41 +31,42 @@ import { useCollection } from "@/firebase/firestore/use-collection";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useMemo } from "react";
-import type { Venda } from "@/lib/types";
+import type { Proposta } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 
 const statusVariant = {
-  'Concluído': 'default',
+  'Aprovada': 'default',
   'Pendente': 'secondary',
-  'Cancelado': 'destructive',
+  'Rejeitada': 'destructive',
+  'Convertida em Venda': 'default',
 } as const;
 
-export default function VendasPage() {
+export default function PropostasPage() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
 
-  const vendasQuery = useMemo(() => {
+  const propostasQuery = useMemo(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'vendas');
+    return collection(firestore, 'propostas');
   }, [firestore, user]);
 
-  const { data: vendas, loading: dataLoading } = useCollection<Venda>(vendasQuery);
+  const { data: propostas, loading: dataLoading } = useCollection<Proposta>(propostasQuery);
   const loading = userLoading || dataLoading;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
-        <h1 className="font-semibold text-lg md:text-2xl">Vendas</h1>
+        <h1 className="font-semibold text-lg md:text-2xl">Propostas</h1>
         <Button className="ml-auto" size="sm">
           <PlusCircle className="h-4 w-4 mr-2" />
-          Registrar Venda
+          Criar Proposta
         </Button>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Vendas</CardTitle>
+          <CardTitle>Histórico de Propostas</CardTitle>
           <CardDescription>
-            Visualize e gerencie todas as suas vendas.
+            Visualize e gerencie todas as suas propostas comerciais.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,7 +79,7 @@ export default function VendasPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden sm:table-cell">Produto</TableHead>
+                  <TableHead className="hidden sm:table-cell">Produto/Serviço</TableHead>
                   <TableHead className="hidden md:table-cell">Data</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
@@ -88,19 +89,19 @@ export default function VendasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vendas.map((venda) => (
-                  <TableRow key={venda.id}>
+                {propostas.map((proposta) => (
+                  <TableRow key={proposta.id}>
                     <TableCell>
-                      <div className="font-medium">{venda.cliente}</div>
+                      <div className="font-medium">{proposta.cliente}</div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{venda.produto}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{proposta.produto}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {venda.data ? format(venda.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
+                      {proposta.data ? format(proposta.data.toDate(), "dd/MM/yyyy", { locale: ptBR }) : 'Data indisponível'}
                     </TableCell>
-                    <TableCell className="text-right">R$ {venda.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">R$ {proposta.total.toFixed(2)}</TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      <Badge variant={statusVariant[venda.status] || 'default'}>
-                        {venda.status}
+                      <Badge variant={statusVariant[proposta.status] || 'default'}>
+                        {proposta.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -118,7 +119,7 @@ export default function VendasPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
-                          <DropdownMenuItem>Gerar Fatura</DropdownMenuItem>
+                          <DropdownMenuItem>Converter em Venda</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
