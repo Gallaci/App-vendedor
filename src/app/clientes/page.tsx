@@ -41,7 +41,7 @@ export default function ClientesPage() {
   const clientesQuery = useMemo(() => {
     // Only create the query if the user is loaded and authenticated
     if (!firestore || !user) return null;
-    return collection(firestore, 'clientes');
+    return collection(firestore, 'clients');
   }, [firestore, user]);
 
   const { data: clientes, loading: dataLoading } = useCollection<Cliente>(clientesQuery);

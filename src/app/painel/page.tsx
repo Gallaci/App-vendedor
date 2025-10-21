@@ -30,8 +30,8 @@ export default function PainelPage() {
 
   const clientesQuery = useMemo(() => {
     if (!firestore || !user) return null
-    return collection(firestore, 'clientes')
-  }, [firestore, user])
+    return collection(firestore, 'clients');
+  }, [firestore, user]);
 
   const { data: vendas, loading: loadingVendas } = useCollection<Venda>(vendasQuery)
   const { data: clientes, loading: loadingClientes } = useCollection<Cliente>(clientesQuery)

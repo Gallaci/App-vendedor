@@ -110,7 +110,7 @@
       },
       "description": "Stores user profile information."
     },
-    "/clientes/{clienteId}": {
+    "/clients/{clientId}": {
       "schema": {
         "$ref": "#/entities/Cliente"
       },

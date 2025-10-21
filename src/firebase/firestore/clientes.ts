@@ -13,7 +13,7 @@ import { FirestorePermissionError } from '../errors';
 type NewCliente = Omit<Cliente, 'id'>;
 
 export async function addCliente(firestore: Firestore, cliente: NewCliente) {
-  const clientesCollection = collection(firestore, 'clientes');
+  const clientesCollection = collection(firestore, 'clients');
   
   // Using .catch() for error handling as per project guidelines
   return addDoc(clientesCollection, cliente).catch((serverError) => {
