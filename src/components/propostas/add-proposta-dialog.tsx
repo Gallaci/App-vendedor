@@ -74,7 +74,7 @@ interface PropostaItemProps {
 
 const defaultItemValues = {
     Projeto: { tipo: 'Projeto' as const, nome: 'Projeto 1' as const, quantidade: 1, valor: 0 },
-    Licenca: { tipo: 'Licenca' as const, nome: 'Licença 1' as const, quantidade: 1, valorCliente: 0, margemRecorrente: 0, margemAvulso: '' },
+    Licenca: { tipo: 'Licenca' as const, nome: 'Licença 1' as const, quantidade: 1, valorCliente: 0, margemRecorrente: 0, margemAvulso: 0 },
     Contrato: { tipo: 'Contrato' as const, nome: 'Contrato 1' as const, quantidade: 1, valor: 0 },
 };
 
@@ -82,16 +82,18 @@ function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
     const itemTipo = useWatch({
         control,
         name: `itens.${index}.tipo` as const,
+        defaultValue: (control as any)._formValues.itens?.[index]?.tipo || 'Projeto'
     });
 
     useEffect(() => {
-        // When the type changes, reset the fields for that item to avoid stale data
-        // and uncontrolled component errors.
         if (itemTipo) {
-            setValue(`itens.${index}`, defaultItemValues[itemTipo]);
+            const currentItem = (control as any)._formValues.itens[index];
+            // Only reset if the type is actually different
+            if (currentItem.tipo !== itemTipo) {
+                setValue(`itens.${index}`, defaultItemValues[itemTipo]);
+            }
         }
-    }, [itemTipo, index, setValue]);
-
+    }, [itemTipo, index, setValue, control]);
 
     return (
         <div className="p-4 border rounded-md relative mb-4 space-y-4">
@@ -395,5 +397,3 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     </Dialog>
   );
 }
-
-    
