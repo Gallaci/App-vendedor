@@ -26,15 +26,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useCollection } from "@/firebase/firestore/use-collection";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Cliente } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
+import { AddClienteDialog } from "@/components/clientes/add-cliente-dialog";
 
 export default function ClientesPage() {
   const firestore = useFirestore();
   const { user, loading: userLoading } = useUser();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const clientesQuery = useMemo(() => {
     // Only create the query if the user is loaded and authenticated
@@ -49,10 +51,12 @@ export default function ClientesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center">
         <h1 className="font-semibold text-lg md:text-2xl">Clientes</h1>
-        <Button className="ml-auto" size="sm">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Adicionar Cliente
-        </Button>
+        <AddClienteDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Button className="ml-auto" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Adicionar Cliente
+          </Button>
+        </AddClienteDialog>
       </div>
       <Card>
         <CardHeader>
