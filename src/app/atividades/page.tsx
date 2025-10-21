@@ -24,7 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useFirestore, useUser } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { addAtividade } from "@/firebase/firestore/atividades";
-import { collection, serverTimestamp, where } from "firebase/firestore";
+import { collection, serverTimestamp, where, query } from "firebase/firestore";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import type { Atividade, DetalhesLigacao, Proposta } from "@/lib/types";
@@ -484,7 +484,7 @@ function TabLeadsOut() {
   
     const leadsOutQuery = useMemo(() => {
         if (!firestore || !user?.email) return null;
-        return where(collection(firestore, 'atividades'), "createdBy", "==", user.email);
+        return query(collection(firestore, 'atividades'), where("createdBy", "==", user.email));
     }, [firestore, user]);
 
     const { data: atividades, loading: dataLoading } = useCollection<Atividade>(leadsOutQuery);
@@ -545,7 +545,7 @@ function TabFormulario() {
 
     const atividadesQuery = useMemo(() => {
         if (!firestore || !user?.email) return null;
-        return where(collection(firestore, 'atividades'), "createdBy", "==", user.email);
+        return query(collection(firestore, 'atividades'), where("createdBy", "==", user.email));
     }, [firestore, user]);
 
     const propostasQuery = useMemo(() => {
