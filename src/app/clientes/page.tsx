@@ -28,7 +28,7 @@ import Link from "next/link"
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { useMemo, useState } from "react";
 import { useFirestore } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import type { Cliente } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { AddClienteDialog } from "@/components/clientes/add-cliente-dialog";
@@ -40,8 +40,9 @@ export default function ClientesPage() {
 
   const clientesQuery = useMemo(() => {
     // Only create the query if the user is loaded and authenticated
-    if (!firestore || !user) return null;
-    return collection(firestore, 'clients');
+    if (!firestore || !user || !user.email) return null;
+    // Query to get clients created by the current user
+    return query(collection(firestore, 'clients'), where("createdBy", "==", user.email));
   }, [firestore, user]);
 
   const { data: clientes, loading: dataLoading } = useCollection<Cliente>(clientesQuery);
