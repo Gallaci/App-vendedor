@@ -90,23 +90,23 @@ export default function ClientesPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="hidden h-9 w-9 sm:flex">
                         <AvatarImage src={cliente.avatarUrl} alt="Avatar" />
-                        <AvatarFallback>{cliente.nome.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{cliente.nome ? cliente.nome.charAt(0) : 'C'}</AvatarFallback>
                       </Avatar>
                       <div className="grid gap-0.5">
-                        <p className="font-medium">{cliente.nome}</p>
+                        <p className="font-medium">{cliente.nome || 'Nome não informado'}</p>
                         <p className="text-xs text-muted-foreground hidden md:block">{cliente.email}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
                     <div className="flex items-center gap-2">
-                        <Button asChild variant="ghost" size="icon">
+                        <Button asChild variant="ghost" size="icon" disabled={!cliente.telefone}>
                             <Link href={`tel:${cliente.telefone}`}>
                                 <Phone className="h-4 w-4" />
                                 <span className="sr-only">Ligar</span>
                             </Link>
                         </Button>
-                        <Button asChild variant="ghost" size="icon">
+                        <Button asChild variant="ghost" size="icon" disabled={!cliente.telefone}>
                             <Link href={`https://wa.me/${cliente.telefone}`}>
                                 <MessageSquare className="h-4 w-4" />
                                 <span className="sr-only">Mensagem</span>
@@ -114,8 +114,8 @@ export default function ClientesPage() {
                         </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{cliente.cidade}</TableCell>
-                  <TableCell className="text-right">R$ {cliente.totalGasto.toFixed(2)}</TableCell>
+                  <TableCell className="hidden md:table-cell">{cliente.cidade || 'Não informado'}</TableCell>
+                  <TableCell className="text-right">R$ {cliente.totalGasto?.toFixed(2) || '0.00'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
