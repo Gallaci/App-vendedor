@@ -206,6 +206,12 @@ interface AddPropostaDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
+const defaultItemValues = {
+    Projeto: { tipo: 'Projeto' as const, nome: 'Projeto 1' as const, quantidade: 1, valor: 0 },
+    Licenca: { tipo: 'Licenca' as const, nome: 'Licença 1' as const, quantidade: 1, valorCliente: 0, margemRecorrente: 0, margemAvulso: '' },
+    Contrato: { tipo: 'Contrato' as const, nome: 'Contrato 1' as const, quantidade: 1, valor: 0 },
+};
+
 export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaDialogProps) {
   const [loading, setLoading] = useState(false);
   const firestore = useFirestore();
@@ -261,7 +267,15 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     try {
       const newPropostaData = {
           cliente: values.cliente,
-          itens: values.itens,
+          itens: values.itens.map(item => {
+            if (item.tipo === 'Licenca') {
+                return {
+                    ...item,
+                    margemAvulso: item.margemAvulso ? Number(item.margemAvulso) : undefined
+                };
+            }
+            return item;
+          }),
           total: totalProposta,
           status: 'Pendente' as const,
           data: serverTimestamp(),
@@ -332,7 +346,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => append({ tipo: 'Projeto', nome: 'Projeto 1', quantidade: 1, valor: 0 })}
+                        onClick={() => append(defaultItemValues.Projeto)}
                         className="mt-4"
                     >
                         Adicionar Item
@@ -364,5 +378,6 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     </Dialog>
   );
 }
+
 
     
