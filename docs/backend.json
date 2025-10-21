@@ -91,6 +91,20 @@
         "status": { "type": "string", "enum": ["Pendente", "Aprovada", "Rejeitada", "Convertida em Venda"] }
       },
       "required": ["cliente", "produto", "total", "data", "status"]
+    },
+    "Atividade": {
+      "title": "Atividade",
+      "description": "Represents a task or activity in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "data": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Pendente", "Concluída"] },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["titulo", "data", "status", "createdBy"]
     }
   },
   "auth": {
@@ -114,6 +128,12 @@
         "$ref": "#/entities/Proposta"
       },
       "description": "Stores individual proposal documents."
+    },
+    "/atividades/{atividadeId}": {
+      "schema": {
+        "$ref": "#/entities/Atividade"
+      },
+      "description": "Stores individual activity documents."
     }
   }
 }

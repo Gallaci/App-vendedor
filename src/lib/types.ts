@@ -31,3 +31,14 @@ export type UserProfile = {
   photoURL?: string;
   role: 'vendedor' | 'admin';
 };
+
+export type AtividadeStatus = 'Pendente' | 'Concluída';
+
+export type Atividade = {
+    id: string;
+    titulo: string;
+    descricao?: string;
+    data: Timestamp;
+    status: AtividadeStatus;
+    createdBy: string;
+};
