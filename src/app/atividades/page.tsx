@@ -27,7 +27,7 @@ import { addAtividade } from "@/firebase/firestore/atividades";
 import { collection, serverTimestamp, where, query } from "firebase/firestore";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import type { Atividade, DetalhesLigacao, Proposta } from "@/lib/types";
+import type { Atividade, Proposta } from "@/lib/types";
 import {
     Table,
     TableBody,
@@ -478,64 +478,6 @@ function TabAvaliacoes() {
     );
 }
 
-function TabLeadsOut() {
-    const firestore = useFirestore();
-    const { user, loading: userLoading } = useUser();
-  
-    const leadsOutQuery = useMemo(() => {
-        if (!firestore || !user?.email) return null;
-        return query(collection(firestore, 'atividades'), where("createdBy", "==", user.email));
-    }, [firestore, user]);
-
-    const { data: atividades, loading: dataLoading } = useCollection<Atividade>(leadsOutQuery);
-    const loading = userLoading || dataLoading;
-  
-    const leadsOut = atividades.filter(
-        (atividade) => atividade.tipo === 'ligacao' && atividade.detalhes.reuniaoAgendada
-    );
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Leads Outbound Gerados</CardTitle>
-          <CardDescription>Contatos de ligações que resultaram em uma reunião agendada.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            ) : leadsOut.length === 0 ? (
-                <p>Nenhuma reunião agendada a partir de ligações ainda.</p>
-            ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Contato</TableHead>
-                            <TableHead>Telefone</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Data da Ligação</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {leadsOut.map((lead) => (
-                            <TableRow key={lead.id}>
-                                <TableCell className="font-medium">{(lead.detalhes as DetalhesLigacao).contato}</TableCell>
-                                <TableCell>{(lead.detalhes as DetalhesLigacao).telefone || 'N/A'}</TableCell>
-                                <TableCell>{(lead.detalhes as DetalhesLigacao).email || 'N/A'}</TableCell>
-                                <TableCell>
-                                {lead.data ? format(lead.data.toDate(), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
-        </CardContent>
-      </Card>
-    );
-}
-
 function TabFormulario() {
     const [isFriday, setIsFriday] = useState(false);
     const [formLink, setFormLink] = useState("");
@@ -705,12 +647,11 @@ export default function AtividadesPage() {
       </div>
 
       <Tabs defaultValue="ligacoes" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <TabsTrigger value="ligacoes">Ligações</TabsTrigger>
           <TabsTrigger value="lead-inbound">Lead Inbound</TabsTrigger>
           <TabsTrigger value="reunioes">Reuniões</TabsTrigger>
           <TabsTrigger value="avaliacoes">Avaliações</TabsTrigger>
-          <TabsTrigger value="leads-out">Leads Out</TabsTrigger>
           <TabsTrigger value="formulario">Formulário</TabsTrigger>
         </TabsList>
 
@@ -728,10 +669,6 @@ export default function AtividadesPage() {
 
         <TabsContent value="avaliacoes" className="mt-4">
           <TabAvaliacoes />
-        </TabsContent>
-
-        <TabsContent value="leads-out" className="mt-4">
-          <TabLeadsOut />
         </TabsContent>
 
         <TabsContent value="formulario" className="mt-4">
