@@ -1,4 +1,3 @@
-
 'use client';
 import { Button } from "@/components/ui/button"
 import {
@@ -28,7 +27,7 @@ import { addAtividade } from "@/firebase/firestore/atividades";
 import { collection, serverTimestamp, where } from "firebase/firestore";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import type { Atividade, DetalhesLigacao } from "@/lib/types";
+import type { Atividade, DetalhesLigacao, Proposta } from "@/lib/types";
 import {
     Table,
     TableBody,
@@ -37,7 +36,7 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table"
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, getWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Schemas
@@ -484,8 +483,8 @@ function TabLeadsOut() {
     const { user, loading: userLoading } = useUser();
   
     const leadsOutQuery = useMemo(() => {
-      if (!firestore || !user) return null;
-      return collection(firestore, 'atividades');
+        if (!firestore || !user?.email) return null;
+        return where(collection(firestore, 'atividades'), "createdBy", "==", user.email);
     }, [firestore, user]);
 
     const { data: atividades, loading: dataLoading } = useCollection<Atividade>(leadsOutQuery);
@@ -539,15 +538,129 @@ function TabLeadsOut() {
 
 function TabFormulario() {
     const [isFriday, setIsFriday] = useState(false);
-  
+    const [formLink, setFormLink] = useState("");
+    const [loading, setLoading] = useState(true);
+    const firestore = useFirestore();
+    const { user, loading: userLoading } = useUser();
+
+    const atividadesQuery = useMemo(() => {
+        if (!firestore || !user?.email) return null;
+        return where(collection(firestore, 'atividades'), "createdBy", "==", user.email);
+    }, [firestore, user]);
+
+    const propostasQuery = useMemo(() => {
+        if (!firestore || !user?.email) return null;
+        // As propostas não têm um campo createdBy, então pegamos todas por enquanto
+        // Idealmente, propostas também deveriam ter 'createdBy'
+        return collection(firestore, 'propostas');
+    }, [firestore, user]);
+
+    const { data: allActivities, loading: activitiesLoading } = useCollection<Atividade>(atividadesQuery);
+    const { data: allProposals, loading: proposalsLoading } = useCollection<Proposta>(propostasQuery);
+
     useEffect(() => {
-      const today = new Date();
-      // Day 5 is Friday (0=Sunday, 1=Monday, ..., 6=Saturday)
-      setIsFriday(today.getDay() === 5);
-    }, []);
-  
-    // This is a placeholder link. A real implementation would dynamically generate this.
-    const formLink = "https://forms.microsoft.com/Pages/ResponsePage.aspx?id=...";
+        const today = new Date();
+        // Day 5 is Friday (0=Sunday, 1=Monday, ..., 6=Saturday)
+        setIsFriday(today.getDay() === 5);
+
+        if (userLoading || activitiesLoading || proposalsLoading) {
+            setLoading(true);
+            return;
+        }
+
+        setLoading(false);
+        if (today.getDay() !== 5) return;
+
+        // Date calculations
+        const now = new Date();
+        const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+        const endOfThisWeek = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
+        const startOfThisMonth = startOfMonth(now);
+        const endOfThisMonth = endOfMonth(now);
+
+        // Filter data for the current week/month
+        const weeklyActivities = allActivities.filter(a => a.data && a.data.toDate() >= startOfThisWeek && a.data.toDate() <= endOfThisWeek);
+        const weeklyProposals = allProposals.filter(p => p.data && p.data.toDate() >= startOfThisWeek && p.data.toDate() <= endOfThisWeek);
+        const weeklySales = weeklyProposals.filter(p => p.status === 'Convertida em Venda');
+        const monthlyProposals = allProposals.filter(p => p.data && p.data.toDate() >= startOfThisMonth && p.data.toDate() <= endOfThisMonth);
+
+        // --- METRIC CALCULATIONS ---
+
+        // Métrica 1: Período da Semana
+        const weekNumber = getWeek(now, { weekStartsOn: 1 });
+        const weekPeriod = `SEMANA ${weekNumber} - ${format(startOfThisWeek, 'dd/MM/yyyy')} – ${format(endOfThisWeek, 'dd/MM/yyyy')}`;
+
+        // Métrica 2: Ligações Atendidas
+        const answeredCalls = weeklyActivities.filter(a => a.tipo === 'ligacao' && a.detalhes.atendida).length;
+
+        // Métrica 3: Apresentações Enviadas
+        const presentationsSent = weeklyActivities.filter(a => a.tipo === 'ligacao' && a.detalhes.apresentacaoEnviada).length;
+
+        // Métrica 4: Leads Inbound
+        const inboundLeads = weeklyActivities.filter(a => a.tipo === 'lead-inbound').length;
+
+        // Métrica 5: Leads Outbound
+        const outboundLeads = weeklyActivities.filter(a => a.tipo === 'ligacao' && a.detalhes.reuniaoAgendada).length;
+
+        // Métrica 6: Reuniões Realizadas
+        const meetingsDone = weeklyActivities.filter(a => a.tipo === 'reuniao').length;
+
+        // Métrica 7: Propostas Enviadas (Quantidade)
+        const proposalsSent = weeklyProposals.length;
+
+        // Métrica 8: Propostas Convertidas (Quantidade)
+        const proposalsConverted = weeklyProposals.filter(p => p.status === 'Convertida em Venda').length;
+
+        // Métrica 9: Propostas Enviadas (Valor)
+        const proposalsSentValue = weeklyProposals.reduce((sum, p) => sum + p.total, 0).toFixed(2);
+
+        // Métrica 10: Vendas Convertidas (Valor)
+        const salesConvertedValue = weeklySales.reduce((sum, p) => sum + p.total, 0).toFixed(2);
+        
+        // Métrica 11: Maior Proposta da Semana
+        const highestProposal = [...weeklyProposals].sort((a, b) => b.total - a.total)[0];
+        const highestProposalText = highestProposal ? `${highestProposal.cliente} - R$ ${highestProposal.total.toFixed(2)}` : "Nenhuma";
+        
+        // Métrica 12: Propostas Ativas (Mês)
+        const activeProposals = monthlyProposals.filter(p => p.status === 'Pendente').length; // Assuming 'sent' means 'Pendente'
+
+        // Métrica 13: Propostas Perdidas
+        const lostProposals = weeklyProposals
+            .filter(p => p.status === 'Rejeitada')
+            .map(p => `${p.cliente}: Motivo não informado`) // Assuming no reason field for now
+            .join('; ');
+
+        // --- URL GENERATION ---
+        const baseUrl = "https://forms.microsoft.com/Pages/ResponsePage.aspx";
+        const formId = "DQSI-e-k_USYrS43g02F-H4iWn_3X9BNjH4G4G4qg_VUN1pFRlBGTlJNT1ZWTllHQlJRRjZJTEFNUC4u";
+
+        const params = {
+            'r6164da4bf1774127be70555fea596f6e': weekPeriod,
+            'r232934cc73534ca586c16c1195eb1d43': answeredCalls,
+            'r952df77fc6f949b5957da64ef91e18da': presentationsSent,
+            'rfb49832f1baf47fca56ece1d1cdba099': inboundLeads,
+            'rdc528ecb651840b99ec9f6a494557683': outboundLeads,
+            'r333ad29f43704b47ad514d79e2cad4be': meetingsDone,
+            'r267073eb8cb44de4bf005a87f86c0f7c': proposalsSent,
+            'r215b88aa6abe4ed6867c0c30577ee74b': proposalsConverted,
+            'recce7d7dce744e21809d460f0e5c3e77': proposalsSentValue,
+            'r7830854853bc4c7d86ef07caf67f0849': salesConvertedValue,
+            'r7c7d987c4a2047fc8e3d46f64b33f6c2': highestProposalText,
+
+            'r11a7fdb0e83d47a2b87211c12c656fad': activeProposals,
+            'rfefedd6893aa4828835b70d5a5fcdb82': lostProposals || "Nenhuma proposta perdida esta semana.",
+        };
+        
+        const urlParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            const entry = { id: key, value: value };
+            urlParams.append('originalparams', JSON.stringify(entry));
+        });
+        
+        const finalUrl = `${baseUrl}?id=${formId}&params=${encodeURIComponent(urlParams.toString().replace(/originalparams=/g, ''))}`;
+        setFormLink(finalUrl);
+
+    }, [isFriday, allActivities, allProposals, user, userLoading, activitiesLoading, proposalsLoading]);
   
     return (
       <Card>
@@ -556,7 +669,12 @@ function TabFormulario() {
           <CardDescription>Resumo de atividades para o formulário semanal.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isFriday ? (
+          {loading ? (
+             <div className="flex items-center space-x-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Calculando métricas da semana...</span>
+             </div>
+          ) : isFriday ? (
             <div className="space-y-4">
               <p>Hoje é dia de check-in! Use o link abaixo para preencher seu formulário com o resumo da semana.</p>
               <Button asChild>
@@ -623,5 +741,3 @@ export default function AtividadesPage() {
     </div>
   )
 }
-
-    
