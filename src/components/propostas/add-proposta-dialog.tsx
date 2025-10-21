@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,7 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useForm, useWatch, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useWatch, useFieldArray, Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -63,6 +64,141 @@ const formSchema = z.object({
 
 
 type AddPropostaFormValues = z.infer<typeof formSchema>;
+
+interface PropostaItemProps {
+    control: Control<AddPropostaFormValues>;
+    index: number;
+    remove: (index: number) => void;
+}
+
+function PropostaItem({ control, index, remove }: PropostaItemProps) {
+    const itemTipo = useWatch({
+        control,
+        name: `itens.${index}.tipo` as const,
+    });
+
+    return (
+        <div className="p-4 border rounded-md relative mb-4 space-y-4">
+            <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-6 w-6"
+                onClick={() => remove(index)}
+            >
+                <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+
+            <FormField
+                control={control}
+                name={`itens.${index}.tipo`}
+                render={({ field: fieldType }) => (
+                    <FormItem>
+                        <FormLabel>Tipo de Item</FormLabel>
+                        <Select onValueChange={fieldType.onChange} defaultValue={fieldType.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="Projeto">Projeto</SelectItem>
+                                <SelectItem value="Licenca">Licença</SelectItem>
+                                <SelectItem value="Contrato">Contrato</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
+            {itemTipo === 'Projeto' && (
+                <>
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                        <FormItem>
+                            <FormLabel>Nome do Projeto</FormLabel>
+                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Projeto 1">Projeto 1</SelectItem>
+                                    <SelectItem value="Projeto 2">Projeto 2</SelectItem>
+                                    <SelectItem value="Projeto 3">Projeto 3</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
+                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="1500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </div>
+                </>
+            )}
+
+            {itemTipo === 'Licenca' && (
+                <>
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                        <FormItem>
+                            <FormLabel>Nome da Licença</FormLabel>
+                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Licença 1">Licença 1</SelectItem>
+                                    <SelectItem value="Licença 2">Licença 2</SelectItem>
+                                    <SelectItem value="Licença 3">Licença 3</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={control} name={`itens.${index}.valorCliente`} render={({ field: fieldVal }) => (
+                            <FormItem><FormLabel>Valor p/ Cliente (R$)</FormLabel><FormControl><Input type="number" placeholder="250.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={control} name={`itens.${index}.margemRecorrente`} render={({ field: fieldMr }) => (
+                            <FormItem><FormLabel>Margem Recorrente (R$)</FormLabel><FormControl><Input type="number" placeholder="50.00" step="0.01" {...fieldMr} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={control} name={`itens.${index}.margemAvulso`} render={({ field: fieldMa }) => (
+                            <FormItem><FormLabel>Margem Avulsa (R$)</FormLabel><FormControl><Input type="number" placeholder="100.00" step="0.01" {...fieldMa} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </div>
+                </>
+            )}
+
+            {itemTipo === 'Contrato' && (
+                <>
+                    <FormField control={control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
+                        <FormItem>
+                            <FormLabel>Nome do Contrato</FormLabel>
+                            <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Contrato 1">Contrato 1</SelectItem>
+                                    <SelectItem value="Contrato 2">Contrato 2</SelectItem>
+                                    <SelectItem value="Contrato 3">Contrato 3</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}/>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField control={control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
+                            <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                        <FormField control={control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
+                            <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
+                        )}/>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
 
 interface AddPropostaDialogProps {
     children: React.ReactNode;
@@ -184,135 +320,20 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
 
                 <div>
                     <h3 className="text-lg font-medium mb-2">Itens da Proposta</h3>
-                     {fields.map((field, index) => {
-                        const itemTipo = useWatch({ control: form.control, name: `itens.${index}.tipo`});
-                        return (
-                            <div key={field.id} className="p-4 border rounded-md relative mb-4 space-y-4">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-2 right-2 h-6 w-6"
-                                    onClick={() => remove(index)}
-                                >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-
-                                <FormField
-                                    control={form.control}
-                                    name={`itens.${index}.tipo`}
-                                    render={({ field: fieldType }) => (
-                                        <FormItem>
-                                            <FormLabel>Tipo de Item</FormLabel>
-                                            <Select onValueChange={fieldType.onChange} defaultValue={fieldType.value}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="Projeto">Projeto</SelectItem>
-                                                    <SelectItem value="Licenca">Licença</SelectItem>
-                                                    <SelectItem value="Contrato">Contrato</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {itemTipo === 'Projeto' && (
-                                    <>
-                                        <FormField control={form.control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
-                                            <FormItem>
-                                                <FormLabel>Nome do Projeto</FormLabel>
-                                                <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Projeto 1">Projeto 1</SelectItem>
-                                                        <SelectItem value="Projeto 2">Projeto 2</SelectItem>
-                                                        <SelectItem value="Projeto 3">Projeto 3</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}/>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                                                <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                            <FormField control={form.control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
-                                                <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="1500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                        </div>
-                                    </>
-                                )}
-
-                                {itemTipo === 'Licenca' && (
-                                    <>
-                                        <FormField control={form.control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
-                                            <FormItem>
-                                                <FormLabel>Nome da Licença</FormLabel>
-                                                <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Licença 1">Licença 1</SelectItem>
-                                                        <SelectItem value="Licença 2">Licença 2</SelectItem>
-                                                        <SelectItem value="Licença 3">Licença 3</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}/>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                                                <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                            <FormField control={form.control} name={`itens.${index}.valorCliente`} render={({ field: fieldVal }) => (
-                                                <FormItem><FormLabel>Valor p/ Cliente (R$)</FormLabel><FormControl><Input type="number" placeholder="250.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name={`itens.${index}.margemRecorrente`} render={({ field: fieldMr }) => (
-                                                <FormItem><FormLabel>Margem Recorrente (R$)</FormLabel><FormControl><Input type="number" placeholder="50.00" step="0.01" {...fieldMr} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                            <FormField control={form.control} name={`itens.${index}.margemAvulso`} render={({ field: fieldMa }) => (
-                                                <FormItem><FormLabel>Margem Avulsa (R$)</FormLabel><FormControl><Input type="number" placeholder="100.00" step="0.01" {...fieldMa} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                        </div>
-                                    </>
-                                )}
-
-                                {itemTipo === 'Contrato' && (
-                                    <>
-                                        <FormField control={form.control} name={`itens.${index}.nome`} render={({ field: fieldNome }) => (
-                                            <FormItem>
-                                                <FormLabel>Nome do Contrato</FormLabel>
-                                                <Select onValueChange={fieldNome.onChange} defaultValue={fieldNome.value}>
-                                                    <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Contrato 1">Contrato 1</SelectItem>
-                                                        <SelectItem value="Contrato 2">Contrato 2</SelectItem>
-                                                        <SelectItem value="Contrato 3">Contrato 3</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}/>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name={`itens.${index}.quantidade`} render={({ field: fieldQty }) => (
-                                                <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="1" {...fieldQty} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                            <FormField control={form.control} name={`itens.${index}.valor`} render={({ field: fieldVal }) => (
-                                                <FormItem><FormLabel>Valor (R$)</FormLabel><FormControl><Input type="number" placeholder="500.00" step="0.01" {...fieldVal} /></FormControl><FormMessage /></FormItem>
-                                            )}/>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )
-                    })}
+                     {fields.map((field, index) => (
+                        <PropostaItem
+                          key={field.id}
+                          control={form.control}
+                          index={index}
+                          remove={remove}
+                        />
+                     ))}
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => append({ tipo: 'Projeto', nome: 'Projeto 1', quantidade: 1, valor: 0 })}
+                        className="mt-4"
                     >
                         Adicionar Item
                     </Button>
@@ -343,3 +364,5 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     </Dialog>
   );
 }
+
+    
