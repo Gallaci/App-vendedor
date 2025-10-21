@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, Package, Settings, ShoppingCart, Users } from "lucide-react"
+import { LayoutDashboard, LogOut, Settings, ShoppingCart, Users } from "lucide-react"
 
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
 import { useActivePath } from "@/hooks/use-active-path"
@@ -10,7 +10,6 @@ const navItems = [
   { href: "/painel", icon: LayoutDashboard, label: "Painel" },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/vendas", icon: ShoppingCart, label: "Vendas" },
-  { href: "/pagamentos", icon: CreditCard, label: "Pagamentos" },
 ]
 
 export function NavMenu() {
