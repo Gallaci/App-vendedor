@@ -170,12 +170,12 @@ function TabLigacoes() {
                 )}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <FormField
                 control={form.control}
                 name="atendida"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -194,7 +194,7 @@ function TabLigacoes() {
                 control={form.control}
                 name="reuniaoAgendada"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -213,7 +213,7 @@ function TabLigacoes() {
                 control={form.control}
                 name="apresentacaoEnviada"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -518,7 +518,7 @@ function TabFormulario() {
         const startOfThisWeek = startOfWeek(now, { weekStartsOn: 1 }); // Monday
         const endOfThisWeek = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
         const startOfThisMonth = startOfMonth(now);
-        const endOfThisMonth = endOfMonth(now);
+        const endOfMonth = endOfMonth(now);
 
         // Filter data for the current week/month
         const weeklyActivities = allActivities.filter(a => a.data && a.data.toDate() >= startOfThisWeek && a.data.toDate() <= endOfThisWeek);
