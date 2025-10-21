@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useForm, useWatch, useFieldArray, Control } from 'react-hook-form';
+import { useForm, useWatch, useFieldArray, Control, UseFormSetValue } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -69,13 +69,29 @@ interface PropostaItemProps {
     control: Control<AddPropostaFormValues>;
     index: number;
     remove: (index: number) => void;
+    setValue: UseFormSetValue<AddPropostaFormValues>;
 }
 
-function PropostaItem({ control, index, remove }: PropostaItemProps) {
+const defaultItemValues = {
+    Projeto: { tipo: 'Projeto' as const, nome: 'Projeto 1' as const, quantidade: 1, valor: 0 },
+    Licenca: { tipo: 'Licenca' as const, nome: 'Licença 1' as const, quantidade: 1, valorCliente: 0, margemRecorrente: 0, margemAvulso: '' },
+    Contrato: { tipo: 'Contrato' as const, nome: 'Contrato 1' as const, quantidade: 1, valor: 0 },
+};
+
+function PropostaItem({ control, index, remove, setValue }: PropostaItemProps) {
     const itemTipo = useWatch({
         control,
         name: `itens.${index}.tipo` as const,
     });
+
+    useEffect(() => {
+        // When the type changes, reset the fields for that item to avoid stale data
+        // and uncontrolled component errors.
+        if (itemTipo) {
+            setValue(`itens.${index}`, defaultItemValues[itemTipo]);
+        }
+    }, [itemTipo, index, setValue]);
+
 
     return (
         <div className="p-4 border rounded-md relative mb-4 space-y-4">
@@ -206,11 +222,7 @@ interface AddPropostaDialogProps {
     onOpenChange: (open: boolean) => void;
 }
 
-const defaultItemValues = {
-    Projeto: { tipo: 'Projeto' as const, nome: 'Projeto 1' as const, quantidade: 1, valor: 0 },
-    Licenca: { tipo: 'Licenca' as const, nome: 'Licença 1' as const, quantidade: 1, valorCliente: 0, margemRecorrente: 0, margemAvulso: '' },
-    Contrato: { tipo: 'Contrato' as const, nome: 'Contrato 1' as const, quantidade: 1, valor: 0 },
-};
+
 
 export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaDialogProps) {
   const [loading, setLoading] = useState(false);
@@ -269,10 +281,14 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
           cliente: values.cliente,
           itens: values.itens.map(item => {
             if (item.tipo === 'Licenca') {
-                return {
-                    ...item,
-                    margemAvulso: item.margemAvulso ? Number(item.margemAvulso) : undefined
-                };
+                const margemAvulsoAsNumber = item.margemAvulso ? Number(item.margemAvulso) : 0;
+                // Only include margemAvulso if it's a positive number
+                if (margemAvulsoAsNumber > 0) {
+                    return { ...item, margemAvulso: margemAvulsoAsNumber };
+                }
+                // Otherwise, create a new object without margemAvulso
+                const { margemAvulso, ...rest } = item;
+                return rest;
             }
             return item;
           }),
@@ -340,6 +356,7 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
                           control={form.control}
                           index={index}
                           remove={remove}
+                          setValue={form.setValue}
                         />
                      ))}
                     <Button
@@ -378,6 +395,5 @@ export function AddPropostaDialog({ children, open, onOpenChange }: AddPropostaD
     </Dialog>
   );
 }
-
 
     
